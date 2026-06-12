@@ -1,14 +1,11 @@
 import defaultMdxComponents from 'fumadocs-ui/mdx';
 import { cn } from '@/lib/cn';
-import { publicAssetUrl } from '@/lib/shared';
+import { resolveImageSrc } from '@/lib/shared';
 import type { MDXComponents } from 'mdx/types';
 import type { ComponentProps } from 'react';
 
 function DocsImage({ src, alt, className, ...props }: ComponentProps<'img'>) {
-  const resolvedSrc =
-    typeof src === 'string'
-      ? publicAssetUrl(src)
-      : src;
+  const resolvedSrc = resolveImageSrc(src);
 
   return (
     // eslint-disable-next-line @next/next/no-img-element -- proxied docs need direct asset URLs, not /_next/image

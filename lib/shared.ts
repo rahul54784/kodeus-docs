@@ -5,6 +5,33 @@ export function publicAssetUrl(path: string): string {
   return siteUrl ? `${siteUrl}${normalized}` : normalized;
 }
 
+/** Resolve MDX image src — string paths or Next.js StaticImageData objects. */
+export function resolveImageSrc(src: unknown): string | undefined {
+  if (!src) return undefined;
+
+  if (typeof src === 'string') {
+    return publicAssetUrl(src);
+  }
+
+  if (typeof src === 'object') {
+    const record = src as { default?: { src?: string }; src?: string };
+    const path =
+      typeof record.default?.src === 'string'
+        ? record.default.src
+        : typeof record.src === 'string'
+          ? record.src
+          : undefined;
+
+    if (path) {
+      return path.startsWith('http://') || path.startsWith('https://')
+        ? path
+        : publicAssetUrl(path);
+    }
+  }
+
+  return undefined;
+}
+
 export const appName = 'Kodeus';
 export const docsRoute = '/docs';
 export const docsImageRoute = '/og/docs';
