@@ -10,6 +10,10 @@ const siteUrl = process.env.URL?.replace(/\/$/, '');
 const config = {
   reactStrictMode: true,
   assetPrefix: siteUrl || undefined,
+  images: {
+    // Avoid /_next/image on the proxy host; MDX uses plain <img> with publicAssetUrl().
+    unoptimized: true,
+  },
   env: {
     NEXT_PUBLIC_SITE_URL: siteUrl ?? '',
   },

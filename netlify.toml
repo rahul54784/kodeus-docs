@@ -11,3 +11,14 @@
   from = "/docs"
   to = "/docs/introduction/what-is-kodeus"
   status = 307
+
+# CORS for assets loaded cross-origin when docs HTML is proxied (e.g. warren.kodeus.ai/docs)
+[[headers]]
+  for = "/_next/static/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+
+[[headers]]
+  for = "/images/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"

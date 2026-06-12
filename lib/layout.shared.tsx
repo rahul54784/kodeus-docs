@@ -1,9 +1,7 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
-import { gitConfig } from './shared';
+import { gitConfig, publicAssetUrl } from './shared';
 
-const logoSrc = process.env.NEXT_PUBLIC_SITE_URL
-  ? `${process.env.NEXT_PUBLIC_SITE_URL}/kodeus-full-logo.png`
-  : '/kodeus-full-logo.png';
+const logoSrc = publicAssetUrl('/kodeus-full-logo.png');
 
 export function baseOptions(): BaseLayoutProps {
   return {
