@@ -24,3 +24,36 @@ yarn-error.log*
 .env*.local
 .vercel
 next-env.d.ts
+# ============================================================
+# Operator scaffolding (HARD RULE 2026-06-05)
+# AGENTS.md / CLAUDE.md / _* internal folders stay LOCAL on disk
+# Files preserved for Claude Code / Cursor / agentic IDE auto-load
+# ============================================================
+AGENTS.md
+CLAUDE.md
+/_INBOX/
+/_archive/
+/_assets/
+/_audit-plans/
+/_audit_runs/
+/_backups/
+/_quarantine/
+/_research/
+/_specs/
+/_drafts/
+/_data/
+/_runs/
+/_session_resumes/
+/_session_state/
+/_email_digests/
+/_dev/
+/_playground/
+/_worktrees/
+/_outreach/
+/_skills-snapshot/
+/_seeds/
+/_email-digests/
+/_logs/
+/_tmp/
+/_handoffs/
+/_runbooks/
