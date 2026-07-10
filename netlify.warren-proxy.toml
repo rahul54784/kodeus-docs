@@ -11,7 +11,7 @@
 
 [[redirects]]
   from = "/docs"
-  to = "DOCS_DEPLOY_URL/docs/introduction/what-is-kodeus"
+  to = "DOCS_DEPLOY_URL/docs/warren/overview"
   status = 200
   force = true
 
