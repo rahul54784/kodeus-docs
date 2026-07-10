@@ -17,6 +17,20 @@ const config = {
   env: {
     NEXT_PUBLIC_SITE_URL: siteUrl ?? '',
   },
+  async redirects() {
+    return [
+      {
+        source: '/docs/introduction/what-is-kodeus',
+        destination: '/docs/warren/overview',
+        permanent: true,
+      },
+      {
+        source: '/docs/introduction/:path*',
+        destination: '/docs/warren/overview',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default withMDX(config);

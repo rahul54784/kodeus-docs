@@ -12,6 +12,17 @@
   to = "/docs/warren/overview"
   status = 307
 
+# Legacy paths removed in warren-only docs rewrite
+[[redirects]]
+  from = "/docs/introduction/what-is-kodeus"
+  to = "/docs/warren/overview"
+  status = 301
+
+[[redirects]]
+  from = "/docs/introduction/*"
+  to = "/docs/warren/overview"
+  status = 301
+
 # CORS for assets loaded cross-origin when docs HTML is proxied (e.g. warren.kodeus.ai/docs)
 [[headers]]
   for = "/_next/static/*"
