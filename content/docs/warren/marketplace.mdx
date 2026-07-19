@@ -1,0 +1,73 @@
+---
+title: Strategy Marketplace
+description: "A marketplace for strategies, not signals: publish your work with a verified track record, and vet what others share before you trust it."
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+
+The marketplace is a **marketplace for strategies, not signals**. Instead of chasing influencers and one-off calls you can never audit, you discover transparent, data-backed strategies with verified track records, and you vet each one before you trust it.
+
+![Strategy marketplace](/docs/images/warren/strategy-marketplace.png)
+
+## A creator economy for trading
+
+This is Warren's answer to signal-chasing and influencer copy-trading: a two-sided market where **creators turn trading expertise into a discoverable, verified asset**, and traders get proven strategies instead of unaccountable calls. Reputation here is earned through performance the platform can prove, never through claims. It is institutional-grade discipline, made accessible to everyone.
+
+## What a listing carries
+
+A marketplace listing is more than a name and a pitch. Alongside the author's metadata, description, category, direction (long / short / dual), risk level, tags, trading style, and complexity, every listing carries **showcase metrics that the platform computes from the strategy's verified [backtests](/docs/warren/building-and-backtesting)**, tied to the exact code version they were produced on. Authors do not type their own performance numbers; the engine does, from results it ran itself. After an author improves a strategy and re-runs backtests, they refresh the showcase, and the listing's numbers update from the new verified results, never from a claim.
+
+<Callout type="info">
+**Clonable is a choice.** Publishing does not mean giving your logic away. A listing is **view-only by default**: its verified performance is public, but its entry and exit rules stay hidden. Marking it **clonable** exposes the full rules and lets others copy it into their own library. Authors choose between building reputation (view-only) and sharing the work itself (clonable).
+</Callout>
+
+## Discovery
+
+The marketplace has two sources, browsable together or separately:
+
+- **The official catalog**: curated, pre-tested presets.
+- **Community listings**: strategies published by other traders, each with its verified record.
+
+Filters cover category, direction, risk level, pair, trading style, complexity, timeframe, and a minimum profit or win-rate floor. Sorting includes best profit, win rate, newest, and **most cloned**, a social signal grounded in actual adoption rather than views.
+
+## A listing's lifecycle
+
+<DiagramListingLifecycle />
+
+## The safe clone path
+
+On the consuming side, Warren surfaces the **real drawdown and per-pair results behind the headline number**. A "+180%" card is judged on its worst pair and deepest drawdown, not its cover. Non-clonable listings show their full verified stats but not their rules; clonable ones can be inspected rule-by-rule before you copy them.
+
+<DiagramClonePath />
+
+A cloned strategy enters your library as a normal strategy: versioned, editable, and yours to backtest. Its marketplace history stays with the original listing, and your copy earns its own record.
+
+<Callout type="info">
+The **Leaderboard** closes the loop. Rankings are built only from ranking-eligible results, so a liquidated run can never sit on top of the board. A great average with one catastrophic regime is a disqualification, not a badge.
+</Callout>
+
+<Accordions type="single">
+<Accordion title="Deep dive: why showcase metrics cannot be gamed">
+
+Every showcase figure is produced by the same engine that runs your own backtests, and it is bound to a content-addressed code version, a hash of the exact strategy code. Two consequences follow:
+
+```
+Author types performance numbers          → NOT POSSIBLE
+Numbers drift from the published code      → NOT POSSIBLE (bound to the code hash)
+Edit the code without re-earning the stats → old showcase invalidated; must refresh
+```
+
+Because the metrics are computed, not claimed, and re-computed only from verified backtest results, the listing's headline is always traceable to code you can (for clonable listings) inspect and re-run yourself. The vetting flow is not a courtesy; it is the intended way to consume the marketplace.
+
+</Accordion>
+</Accordions>
+
+## Where to go next
+
+<Cards>
+  <Card title="Backtesting and Validation" href="/docs/warren/building-and-backtesting" description="The verified backtests that showcase metrics are computed from." />
+  <Card title="Intelligent Execution" href="/docs/warren/execution" description="Deploy a cloned strategy as a bot, paper first." />
+  <Card title="Performance and Analytics" href="/docs/warren/analytics" description="Track a deployed strategy's real record, judged on its worst drawdown." />
+</Cards>

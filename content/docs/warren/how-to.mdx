@@ -1,0 +1,110 @@
+---
+title: How-To Guides
+description: "Six recipes for the jobs you will actually do with Warren, from an honest market read to publishing a strategy. Each is a plain-English conversation, not a configuration exercise."
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+![Warren chat workflow](/docs/images/warren/chat-workflow.png)
+
+Everything below is driven by talking to Warren. You never call anything directly: you describe what you want, and Warren selects and chains the right capabilities behind a calibrated, honesty-gated answer.
+
+## 1. Get an honest market read
+
+**Ask Warren:** *"What's BTC doing right now?"*
+
+You get back the regime, how strongly the timeframes agree, and the level that would prove the read wrong.
+
+<Steps>
+<Step>Ask for the read: *"What's BTC doing right now?"* Note the coverage verdict that comes with it.</Step>
+<Step>Ask how durable it is: *"How long is this likely to hold?"* for the persistence forecast.</Step>
+<Step>Ask for levels: *"Where would I enter, and what's the invalidation?"* Warren frames them as if/then scenarios.</Step>
+<Step>If Warren abstains, ask *"Why did you abstain?"* The reasons are always concrete, thin, stale, or conflicting inputs, not a shrug.</Step>
+</Steps>
+
+<Callout type="info">
+An abstention is a correct outcome, not a failure. A platform that answers anyway is guessing with your money.
+</Callout>
+
+## 2. Find and validate a strategy
+
+**Ask Warren:** *"Find me a low-risk strategy for this market."*
+
+Then insist on the full discipline before any capital is involved.
+
+<Steps>
+<Step>Ask for a fit: *"Find me a low-risk strategy for this market."*</Step>
+<Step>Stress-test it across conditions: *"Backtest it across all three regimes and grade its robustness."* Read the worst regime, not the average.</Step>
+<Step>Reality-check it: *"Now run it over the last year continuously."* Only a result that survives both views deserves capital.</Step>
+</Steps>
+
+See [Strategy Recommendations](/docs/warren/strategies) for discovery and [Building and Backtesting](/docs/warren/building-and-backtesting) for the honest testing discipline in full.
+
+## 3. Deploy a paper bot with guardrails
+
+**Ask Warren:** *"Paper-trade it on BTC with a 5% profit target, 5% max loss, and stop after 20 trades."*
+
+<Steps>
+<Step>State the deployment and its guards in one sentence, like the example above.</Step>
+<Step>Review the confirmation card. It includes the pre-trade risk check. Approve it.</Step>
+<Step>Monitor from the Live Strategies screen on the [dashboard](/docs/warren/dashboard), or just ask: *"How are my bots doing?"*</Step>
+<Step>Stop anytime with *"Stop it"* or *"Stop all my bots."* Resume later without losing history.</Step>
+</Steps>
+
+<Callout type="info">
+Paper is the default and needs no exchange keys. See [Trading Modes](/docs/warren/modes) for how paper and live differ, and [Dashboard Overview](/docs/warren/dashboard) for the per-bot health verdict.
+</Callout>
+
+## 4. Let Warren trade a position
+
+**Ask Warren:** *"Open a small long on SOL with a stop-loss and take-profit."*
+
+<Steps>
+<Step>Describe the position: *"Open a small long on SOL with a stop-loss and take-profit."*</Step>
+<Step>Warren proposes the exact position, size, leverage, stop, target, and liquidation distance, then waits for your approval.</Step>
+<Step>Track it with *"Show your open positions."*</Step>
+<Step>Scale out with *"Close half of it."* The book runs against the paper sandbox until you explicitly allocate live capital.</Step>
+</Steps>
+
+This is Warren's own discretionary book, kept entirely separate from your strategy bots. See [Capital Allocation](/docs/warren/allocation) for how the two share one capital pool without ever double-spending.
+
+## 5. Watch the market while you're away
+
+**Ask Warren:** *"Check the market every morning and message me what changed."*
+
+<Steps>
+<Step>Create a schedule in plain English, like the example above.</Step>
+<Step>On each run, Warren scans, compares against the last run, and sends a Telegram or in-app summary.</Step>
+<Step>Read the summary. That is the whole job by default.</Step>
+</Steps>
+
+<Callout type="warn">
+Scheduled runs are watch-and-report by default: Warren is hard-blocked from trading on an unattended run. Arming autonomous execution is a separate, deliberate step, nothing ever trades unsupervised by accident.
+</Callout>
+
+## 6. Publish or vet a marketplace strategy
+
+**Ask Warren:** *"Publish this strategy to the marketplace"* or *"Is this strategy actually any good?"*
+
+<Steps>
+<Step>To publish, say *"Publish this strategy to the marketplace."* Its track record travels with it, tied to the exact code version.</Step>
+<Step>Before cloning someone else's, ask *"Is this strategy actually any good?"*</Step>
+<Step>Warren surfaces the worst drawdown and per-pair results behind the headline number, judge it on those, not the cover.</Step>
+<Step>After cloning, re-validate it yourself: backtest across regimes, grade the worst one, then deploy paper first.</Step>
+</Steps>
+
+<Callout type="info">
+A "+180%" card with one catastrophic regime is a disqualification, not a buy. Marketplace numbers are computed by the platform from verified backtests, never typed in by an author.
+</Callout>
+
+## Continue
+
+<Cards>
+  <Card title="Dashboard Overview" href="/docs/warren/dashboard" description="Track every running strategy and read the per-bot health verdict." />
+  <Card title="FAQ" href="/docs/warren/faq" description="Why a bot stopped, why live and backtest results differ, and more." />
+</Cards>
+
+Next: [FAQ](/docs/warren/faq)

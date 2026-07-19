@@ -1,19 +1,27 @@
 ---
 title: Exchange Connectivity
-description: "Warren connects to your exchange using API-based authorization and follows a non-custodial execution model. Your funds stay on your exchange."
+description: "Warren connects to seven venues through API-based authorization under a non-custodial model. Your funds stay on your exchange, your keys are encrypted to your identity, and leverage is capped in code."
 ---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
 
 Warren currently supports exchange connectivity using API-based authorization.
 
 ## Supported exchanges
 
+Warren operates across **seven venues** for market data, backtesting, and live execution:
+
 - Binance
 - Bybit
 - OKX
+- KuCoin
+- Gate.io
 - Kraken
 - Hyperliquid
 
-Additional exchanges and trading pairs are being added.
+Hyperliquid is perpetuals-only and settles in USDC; the other six support both spot and futures. Additional trading pairs are being added over time.
 
 ## Non-custodial architecture
 
@@ -24,6 +32,18 @@ Warren follows a non-custodial execution model. This means:
 - API access is used only for execution
 - Permissions can be revoked anytime
 - You remain in control of allocations and limits
+
+## Encrypted credentials
+
+<Callout type="info">
+Paper mode needs no exchange account at all. When you do go live, your API keys are stored with **authenticated encryption bound to your identity**: a key can only be decrypted in its owner's context, never replayed across accounts, and never held in plaintext inside the analysis engine. Decryption happens only inside an isolated operations function at the moment an order or balance check runs.
+</Callout>
+
+## The leverage cap
+
+<Callout type="warn">
+Exchanges advertise leverage as high as 50–125×. Warren caps user leverage at a small single-digit multiple and blocks risky configuration combinations before a bot can start. Over-leverage is the fastest path to liquidation: at high leverage the liquidation distance shrinks below normal market noise, so the cap is what makes the rest of the risk framework meaningful. It is enforced in code, not offered as advice.
+</Callout>
 
 ## Connecting an exchange
 
@@ -46,6 +66,25 @@ You can later:
 - Modify preferred exchanges
 - Adjust runtime configuration
 
+You can also check your spot and futures wallet balances per venue, and see each venue's supported modes, leverage limits, and whether your keys are connected. Account-wide risk limits that act automatically (drawdown caps, per-strategy capital limits, loss-streak pauses) are covered in [Runtime Configuration](/docs/warren/configuration).
+
 API keys should be generated with trading permissions only. Never grant withdrawal permission to Warren.
+
+<Accordions type="single">
+<Accordion title="Deep dive: the venue registry">
+
+Each venue is described by a registry entry: its supported market types (spot and/or futures), margin modes, the venue's native maximum leverage (20–125× depending on the exchange, versus Warren's own far lower cap), settlement quirks (Hyperliquid settles in USDC and is perpetuals-only), and per-venue fee defaults.
+
+Every deploy and backtest is validated against this registry before anything runs: the market type is auto-corrected for futures-only venues, and every requested pair is verified to actually trade on the chosen exchange. A misconfigured pair or market type is caught up front, not after capital is committed.
+
+</Accordion>
+</Accordions>
+
+## Continue
+
+<Cards>
+  <Card title="Runtime Configuration" href="/docs/warren/configuration" description="Set preferred pairs, stake, and open-trade limits for new deployments." />
+  <Card title="Capital Allocation" href="/docs/warren/allocation" description="Understand the shared pool your bots and Warren's book trade against." />
+</Cards>
 
 Next: [Runtime Configuration](/docs/warren/configuration)

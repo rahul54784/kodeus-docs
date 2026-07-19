@@ -1,0 +1,72 @@
+---
+title: Intelligent Execution
+description: "Run strategies as automated bots or let Warren trade its own discretionary book, in paper or with real funds, with every money action risk-gated."
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+
+Warren's **intelligent execution** is where a validated strategy becomes real activity in a market. You can run strategies as automated bots, or let Warren trade an independent discretionary book, in practice or with real funds, across seven exchanges, and every action is risk-gated before it fires.
+
+There are two execution books, and they share one capital pool but **never mix**: strategy trades and Warren's own trades are stored, reported, and managed separately. A capital allocator sits over both, holding margin reservations against a single pool so a bot and a discretionary position can never double-spend the same capital.
+
+## One capital pool, two books
+
+<DiagramCapitalPool />
+
+Both books draw from the same [capital allocation](/docs/warren/allocation), so what one book reserves the other cannot touch.
+
+## Strategy bots
+
+![Live strategy bots](/docs/images/warren/bots-management.png)
+
+Deploy any strategy as an automated bot in **paper** mode (the default: no exchange keys, zero risk) or **live** mode (real funds on a connected exchange). Each bot carries its own safety guards:
+
+- **Auto-stop after N trades**, so a bot cannot run forever unattended.
+- **A take-profit target** that stops the bot once a gain is reached.
+- **A trailing stop** that locks in progress as the position moves your way.
+- **A max-loss cap** that halts the bot before losses run away.
+- **A one-trade "snipe" mode** for a single, specific setup.
+
+Bots can be stopped (optionally force-closing their open positions), resumed without losing history, reconfigured, and monitored as a fleet. Dead tasks are reconciled to *stopped* rather than lingering as phantom bots. Track every running and stopped bot from your [dashboard](/docs/warren/dashboard).
+
+## Warren's discretionary book
+
+Separate from the bots, Warren manages its own fund-manager book. It opens, sizes, partially or fully closes, and cancels individual positions, against a **$100K simulated sandbox** in paper mode or real allocated capital in live. Positions run futures with capped leverage or spot; every position can carry its own stop-loss and take-profit. Open positions report unrealized P&L at the current mark, and a resting limit or stop intent stays visible as a pending order that you can cancel before it fills.
+
+<Callout type="warn" title="Money actions are gated">
+Every entry and exit, bot or book, passes the same gates before it happens: a mandatory **pre-trade risk review** (a liquidation-and-risk check that can block a reckless setup), the **leverage cap** (Warren caps user leverage at a small single-digit multiple even where a venue advertises 50–125×), and a **confirm-to-approve** step. Warren proposes the exact position; you approve. On an unattended run in the default watch-and-report mode, the [autopilot gate](/docs/warren/autopilot) vetoes the action entirely; opt-in autonomous execution is the sole, deliberately-armed exception. And exchange keys are decrypted only inside an isolated operations function, never in the engine process.
+</Callout>
+
+<Accordions type="single">
+<Accordion title="Deep dive: execution mechanics">
+
+**Bot session lifecycle.** A deploy validates the full configuration against the venue registry (pair availability, market type, leverage) before anything starts, then launches a dedicated task per bot. Stopping optionally force-closes open positions with a bounded confirmation wait, or leaves them running for a later resume. Fleet monitoring reconciles dead tasks to *stopped* instead of showing phantom bots.
+
+**Discretionary book mechanics.** The book supports four verbs:
+
+```
+open    → size a new position (futures with capped leverage, or spot)
+close   → partial by percentage, or close-all
+adjust  → attach or move a per-position stop-loss / take-profit
+cancel  → withdraw a pending limit/stop intent before it fills
+```
+
+A limit order that does not cross immediately becomes a visible **pending intent**: in paper it fills when price reaches the level; in live it rests on the venue. Open positions are marked to the live price for unrealized P&L, reported separately from realized results.
+
+**One pool, no double-spend.** A capital allocator holds margin reservations across both books against a single pool, so a bot and a discretionary position cannot reserve the same capital twice. Paper trading draws from a dedicated simulated budget rather than the live pool.
+
+**Credential isolation.** Live trading uses your own exchange API keys, stored with authenticated encryption bound to your identity. Keys are decrypted only inside an isolated operations function, never in the engine process, so plaintext secrets are never held where the trading logic runs. See [Exchange Connections](/docs/warren/exchanges).
+
+</Accordion>
+</Accordions>
+
+## Where to go next
+
+<Cards>
+  <Card title="Performance and Analytics" href="/docs/warren/analytics" description="Track profit and loss, drawdown, win rate, and per-bot health, in two parallel families." />
+  <Card title="Autopilot" href="/docs/warren/autopilot" description="Run Warren unattended: watch-and-report by default, autonomous execution only if armed." />
+  <Card title="Strategy Marketplace" href="/docs/warren/marketplace" description="Discover and clone verified strategies, then deploy them paper-first." />
+  <Card title="Trading Modes" href="/docs/warren/modes" description="Understand paper versus live, and how each execution path runs." />
+</Cards>

@@ -1,0 +1,49 @@
+---
+title: Why Regime
+description: "No single strategy wins in every market: Warren's durable edge is matching behavior to the market's current state and abstaining when that state cannot be read honestly."
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+
+No single strategy wins in every market. The durable edge is matching behavior to the market's current state, and abstaining when that state cannot be read honestly. This is the first of Warren's three design commitments, and the primitive the rest of the system is built on.
+
+A **regime** is Warren's read of a market's current character: not where price is going, but what state it is in. Every read collapses to one of three basic directions, **bullish** (trending up), **bearish** (trending down), or **ranging** (no dominant direction), refined into a finer seven-step ladder for graded conviction. How the read is computed, and how three timeframes cascade into one verdict, is covered in [The Regime Engine](/docs/warren/regime-engine).
+
+## No single strategy won every year
+
+A strategy's edge is *conditional* on the market's state. Warren's own multi-year backtests make the point bluntly:
+
+| Strategy archetype | Bull year | Bear year | Verdict |
+| --- | --- | --- | --- |
+| Long trend follower | Positive | Deep negative | Dies when the trend inverts |
+| Short / rally-fade | Negative | Strong positive | Gives it all back in a bull |
+| Always-on / blended | Roughly flat | Roughly flat | Survives only by being defensive |
+
+**No single strategy won every year.** Long strategies were destroyed in the bear year; short-biased strategies gave back their gains in the bull. The only all-weather survivors were structurally defensive by design, and they paid for it with muted returns.
+
+The correct product response is not to hunt for one strategy to run forever. It is to **switch strategy, sizing, and horizon to match the regime**, and to abstain when the regime read itself is untrustworthy.
+
+<Callout type="info">
+**Why it matters.** Regime is not a feature bolted onto Warren, it is the primitive the rest of the system conditions on. Strategy discovery is ranked by regime fit; backtest windows are chosen by regime; position-size hints are discounted in weak regimes; and a directional call is withheld entirely when the regime cannot be read with confidence (see [Built Not to Lie](/docs/warren/built-not-to-lie)).
+</Callout>
+
+## Where regime conditions everything
+
+Because edge is conditional, Warren threads the current regime through every decision it makes:
+
+- **Strategy discovery** ranks candidates by fit to the current regime, so what surfaces first is what should work *now*, not what looked best on paper.
+- **Backtest windows** are chosen by regime, so a strategy is tested where its edge is supposed to live rather than on a blurred average. This is the argument of [Why Regime-Based Backtesting](/docs/warren/why-regime-backtesting).
+- **Position-size hints** are discounted in weak or conflicted regimes, because a strong signal in a fragile state is still a fragile bet.
+- **A directional call is withheld entirely** when the regime cannot be read with confidence. Abstaining is a correct outcome, not a failure, and the discipline behind it is [Built Not to Lie](/docs/warren/built-not-to-lie).
+
+## The honest limit
+
+Matching behavior to regime only pays off if you also *detect* the regime correctly in real time and *switch* in time when it turns. That is a real, ongoing cost, and Warren does not pretend it away: the full-period backtest exists precisely to price in the cost of not switching, and the high-confidence gate exists to withhold a call when the live read is too weak to act on. The edge is real, but it is earned by discipline, not granted for free.
+
+<Cards>
+  <Card title="Why Regime-Based Backtesting" href="/docs/warren/why-regime-backtesting" description="How one continuous number averages away the very structure of edge, and the two-mode fix." />
+  <Card title="Built Not to Lie" href="/docs/warren/built-not-to-lie" description="Verdicts not scores: the validity layer that refuses claims it cannot defend." />
+  <Card title="The Regime Engine" href="/docs/warren/regime-engine" description="How the three-timeframe read and the cascade are actually computed." />
+  <Card title="Market Intelligence" href="/docs/warren/market-intelligence" description="Read any market on closed candles, every read stamped with its freshness." />
+</Cards>

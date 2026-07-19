@@ -1,7 +1,11 @@
 ---
 title: Capital Allocation
-description: "Configure your connected exchange, trading pair, allocation amount, and execution boundaries before Warren launches a strategy."
+description: "Configure the exchange, pair, amount, and boundaries Warren trades within, backed by one shared capital pool that keeps your strategy bots and Warren's own book from ever double-spending the same funds."
 ---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
 
 ![Portfolio](/docs/images/warren/portfolio.png)
 
@@ -22,5 +26,32 @@ Before launching execution, Warren requires you to configure capital allocation.
 - Trading pair selection
 
 Capital allocation is the final guardrail you set before a strategy goes live. Warren operates strictly within the amount, pair, and execution boundaries you define here.
+
+## One capital pool, two books
+
+Warren runs two kinds of execution: your **strategy bots** and Warren's own **discretionary book**. Both draw from a single shared capital pool, and a capital allocator holds margin reservations across the two so they can never double-spend the same funds. A bot and one of Warren's own positions cannot both claim the same capital at once.
+
+The two books stay strictly separate everywhere else: their trades are stored, reported, and managed on their own, so the bots' numbers and Warren's numbers never blur together. See [Execution: Bots and Warren's Book](/docs/warren/execution) for how each book trades and the guards it carries.
+
+<Callout type="info">
+In paper mode, both books draw from a dedicated simulated budget instead of real funds, so you can practice the full allocation flow before any live capital is involved.
+</Callout>
+
+<Accordions type="single">
+<Accordion title="Deep dive: how the pool prevents double-spending">
+
+The capital allocator sits between your configured allocation and both execution books. When a bot opens a position or Warren opens one in its discretionary book, the allocator places a margin reservation against the shared pool. A second action cannot reserve capital that is already committed.
+
+This is why allocation is a real guardrail and not just a display number: the boundary you set here is the ceiling both books are measured against, and reservations are what keep that ceiling honest across everything trading at once.
+
+</Accordion>
+</Accordions>
+
+## Continue
+
+<Cards>
+  <Card title="Exchange Connectivity" href="/docs/warren/exchanges" description="Connect a venue and understand the non-custodial, encrypted-credentials model." />
+  <Card title="Dashboard Overview" href="/docs/warren/dashboard" description="Track allocation, equity, and per-bot health once strategies are running." />
+</Cards>
 
 Next: [Exchange Connectivity](/docs/warren/exchanges)

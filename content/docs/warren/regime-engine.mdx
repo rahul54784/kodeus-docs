@@ -1,0 +1,97 @@
+---
+title: The Regime Engine
+description: "How Warren turns a raw market into a labeled, graded, and honestly-projected regime read, computed only on closed candles."
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+
+Regime is the primitive the rest of Warren conditions on: [strategy discovery](/docs/warren/strategies) ranks by regime fit, backtest windows are chosen by regime, position-size hints are discounted in weak regimes, and a directional call is withheld entirely when the regime cannot be read with confidence. This page explains how a raw market becomes a labeled, graded, trustworthy regime read, and how far forward that read can honestly be projected.
+
+## How the label is built
+
+The regime engine is a **weighted evidence aggregator**. On each analyzed timeframe (by default 1h, 4h, and 1d), a family of well-known technical dimensions, trend, momentum, directional strength, volatility state, and volume or flow, each cast a vote toward bullish, bearish, or ranging. Higher timeframes use looser sensitivity than lower ones, because daily indicators move more slowly than hourly. Cross-timeframe agreement reinforces the aggregate; disagreement tilts the read toward ranging.
+
+Derivatives (funding rate, open-interest change versus price) and market sentiment nudge the score as confirming context, and for altcoins broad-market context is folded in as a macro modifier. The result maps onto the [seven-step conviction ladder](/docs/warren/core-concepts), from strong bullish through sideways to strong bearish, with graded conviction.
+
+- **Closed candles only.** The engine never scores a forming bar. An indicator computed on an unclosed candle "repaints" and effectively leaks the future, so closed-candle scoring makes every read reproducible by construction.
+- **Liquidity is information, not score.** Order-book depth, positioning skew, and liquidation proxies are attached for trade management but deliberately excluded from the regime score, keeping the classification a clean function of price action (including volume), derivatives, and sentiment.
+
+<Callout type="info">
+**Hysteresis: refusing to flip-flop.** A classifier recomputed every few hours would thrash on noise. The engine applies hysteresis at the combined and per-timeframe levels: changing the stored label requires conviction, a sufficient margin between the leading and runner-up reads plus corroboration from recent history, unless the old label is clearly losing, in which case the change is immediate. A change threshold wider than the revert threshold, applied to market state. A companion **whipsaw** read counts recent label flips and flags a fragile market even when the current label looks clean.
+</Callout>
+
+Two refinements shape the final label. A **momentum read** (strengthening, stable, or weakening) gates whether a "strong" label is allowed at all: a decaying trend cannot earn the strongest rung. And every read carries a single flat **consensus block** so consumers never have to triangulate across fields.
+
+<Accordions type="single">
+<Accordion title="Deep dive: the consensus contract">
+
+Every read exposes one flat consensus block. The `is_high_confidence` flag, not the percentage, is the decision gate: it is a set of structural AND-conditions (all-timeframe agreement plus a strong cascade plus non-ranging), never a threshold on an opaque probability.
+
+```text
+consensus:
+  regime               bullish | bearish | ranging
+  agreement            all-agree | mostly-agree | disagree
+  cascade_kind         e.g. full cascade, higher-TF trend
+  confidence_pct       0-100         # transparency only
+  is_high_confidence   boolean       # THE decision gate (structural AND-conditions)
+  reason               plain-language explanation
+```
+
+</Accordion>
+</Accordions>
+
+## The multi-timeframe cascade
+
+Each timeframe is classified independently, and the (1h, 4h, 1d) tuple maps to a **cascade level** describing how the timeframes relate. From it the engine derives a **cascade master regime**, the direction the timeframe *structure* supports with higher timeframes taking priority, which is often more trustworthy than the blended score. The read warns when the two disagree.
+
+| Cascade level | Meaning | Confidence |
+| --- | --- | --- |
+| Full cascade | All three timeframes agree on direction | high |
+| Higher-TF trend | 4h and 1d agree; 1h counter-moving (a pullback, not a reversal) | medium-high |
+| Partial cascade | 1h and 4h agree; the daily has not confirmed yet | medium |
+| Daily only | Only the daily is directional; lower timeframes consolidating | low to medium |
+| 1h diverging | Only the 1h is directional; higher timeframes ranging (fragile) | low |
+| Conflicting / mixed | Directional but contradictory, or no coherent structure | low |
+
+**Why the cascade is central:** a regime where all three timeframes agree tends to persist for days; one propped up by a single timeframe rarely survives past hours. Cross-timeframe alignment is the strongest available predictor of durability, so the cascade directly gates how far forward the engine will forecast.
+
+## Persistence and survival forecasting
+
+<Callout type="info">
+**Not a price prediction.** This is the one place Warren forecasts forward, and it forecasts *state duration*, how long the current regime holds, never price direction. States have measurable lifetimes; prices do not have knowable paths.
+</Callout>
+
+The baseline is a cascade-gated persistence probability. Where enough history exists, it upgrades to an **age-conditioned empirical survival** estimate that accounts for how long the regime has *already* run: a regime weeks into its life has a different forward survival than one that started yesterday, which a memoryless model cannot express.
+
+<DiagramSurvival />
+
+When the regime is too young or too few comparable spells exist, the forecast falls back or abstains rather than emitting a confident-looking number from thin data, the same discipline applied everywhere in Warren.
+
+<Accordions type="single">
+<Accordion title="Deep dive: when the survival upgrade is allowed">
+
+Support checks make the upgrade honest. The survival estimate is used only when the current regime's age falls inside the observed distribution of comparable historical spells **and** enough spells remain "at risk" at that age for the conditional estimate to be meaningful; durations are floored so micro-spells do not pollute the curve. Outside that support, the forecast falls back to the baseline or abstains. Forecast responses carry both estimates and name which method produced the headline figure.
+
+</Accordion>
+</Accordions>
+
+## Choosing backtest windows from regime history
+
+Historical regime windows are pre-computed per pair as dated spans, each labeled with its basic regime plus quality metadata: duration, the classification confidence it was labeled with, and the intra-window counter-trend drawdown it contains. The [window planner](/docs/warren/why-regime-backtesting) searches these and ranks candidates quality-first, penalizing windows stitched from adjacent regimes. Tokens without their own history fall back through proxies, and every read reports which source it used:
+
+<DiagramFallbackChain />
+
+When the best available window is weak, only stitched windows, low classification confidence, or heavy intra-window drawdown, the planner attaches explicit warnings instead of returning a clean-looking answer. **A net-bullish window is not a monotonic uptrend**, and that caveat is surfaced, not hidden.
+
+<Callout type="warn">
+**Black box.** The indicator set, per-timeframe thresholds, vote weights, derivatives and sentiment cutoffs, cascade multipliers, survival-support constants, and window-scoring weights are internal. The documented contract is the boundary: market data in, a graded label, cascade, persistence forecast, and coverage verdict out.
+</Callout>
+
+## Where this fits
+
+<Cards>
+<Card title="The Validity Layer" href="/docs/warren/validity-layer" description="The deterministic checks that decide whether a number, a regime read included, is trustworthy enough to act on." />
+<Card title="System Architecture" href="/docs/warren/architecture" description="Where the regime engine lives, and the guard that can end a turn before any directional claim." />
+</Cards>

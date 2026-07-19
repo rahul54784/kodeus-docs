@@ -1,28 +1,49 @@
 ---
 title: Runtime Configuration
-description: "Configure runtime behavior through settings: preferred exchanges, trading pairs, amount per trade, max open trades, and trading mode preferences."
+description: "Set trading defaults for new deployments, then let account-wide risk limits (leverage cap, drawdown caps, per-strategy limits, loss-streak pauses) act automatically in code."
 ---
 
-![Bots management](/docs/images/warren/bots-management.png)
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
 
-You can configure runtime behavior through settings.
+Configuration in Warren has two halves. The first is a set of **trading defaults** you choose: what a new bot or position should assume when you do not say otherwise. The second is a set of **account-wide risk limits** that you set once and then act automatically, in code, without waiting to be asked.
 
 ## Configurable preferences
 
+These defaults apply to new deployments and can be overridden per bot or per position:
+
 - Preferred exchanges
 - Preferred trading pairs
-- Amount per trade
+- Amount per trade (stake)
 - Maximum open trades
-- Trading mode preferences
+- Trading mode preferences (paper or live)
 - Spot or futures preferences
 
-The platform also calculates required capital dynamically using your runtime configuration.
+The platform also calculates required capital dynamically from your runtime configuration, so the stake, leverage, and open-trade settings together determine how much of your [trading allocation](/docs/warren/allocation) a deployment reserves.
+
+## Account-wide risk limits
+
+Beyond per-bot guards, Warren enforces a layer of **account-wide** rules that apply across every bot and across Warren's own [discretionary book](/docs/warren/execution). You set them once; the engine applies them automatically. They live on the **Risk** screen, and when one is breached the affected trading auto-stops and you are alerted.
+
+| Parameter | What it does | How it acts |
+| --- | --- | --- |
+| **Leverage cap** | A ceiling on position leverage, capped at a small single-digit multiple, well below the venue's native 20–125×. | Enforced in code. Blocks risky configuration combinations *before* a bot can start, not after. |
+| **Max Drawdown** | A ceiling on account-wide peak-to-trough loss (the total drawdown cap). | Auto-stops trading when cumulative loss hits the limit. |
+| **Max Daily Loss** | A ceiling on realized loss inside a single day. | Auto-stops trading for the day when the day's loss reaches the limit. |
+| **Per-strategy capital limits** | A cap on how much of the trading allocation any single strategy may commit. | Keeps one bot from monopolizing the shared capital pool. |
+| **Loss-streak pauses** | A consecutive-loss circuit breaker. | Pauses a strategy after a run of losses so it can be reviewed before it keeps bleeding. |
+| **Max Open Trades** | A cap on concurrent open positions. | Blocks new entries once the ceiling is reached. |
+
+<Callout type="warn">
+These limits are hard mechanisms, not advice. Over-leverage is the fastest path to liquidation: at high leverage the liquidation distance shrinks below normal market noise, so the leverage cap is what makes the rest of the risk framework meaningful. The cap and the auto-stops are enforced in code and cannot be talked past.
+</Callout>
+
+Per-bot guards (auto-stop after N trades, a take-profit target, a trailing stop, and a max-loss cap) stack *on top of* these account-wide limits. See [Execution](/docs/warren/execution) for the per-bot controls.
 
 ## Strategy activation
 
-After allocation is configured, Warren activates the selected strategy.
-
-The current runtime experience displays:
+After allocation is configured, Warren activates the selected strategy. The current runtime experience displays:
 
 - Selected strategy
 - Trading mode
@@ -33,5 +54,21 @@ The current runtime experience displays:
 - Performance visibility
 
 Strategies immediately transition into monitoring after activation.
+
+<Accordions type="single">
+<Accordion title="Deep dive: how a deploy is validated before it runs">
+
+Every deploy validates the full configuration against the venue registry before anything starts: pair availability, market type (auto-corrected for futures-only venues), and leverage against both the venue's native maximum and Warren's own cap. A misconfigured pair or an out-of-bounds leverage setting is caught up front, so a bot never starts on a configuration that could not have traded. Once validated, a dedicated task starts per bot, and fleet monitoring reconciles any dead task to *stopped* rather than showing a phantom bot.
+
+</Accordion>
+</Accordions>
+
+## Continue
+
+<Cards>
+  <Card title="Capital Allocation" href="/docs/warren/allocation" description="The three-bucket split your bots and Warren's book trade against." />
+  <Card title="Dashboard Overview" href="/docs/warren/dashboard" description="Portfolio metrics, regime visibility, and per-bot runtime state." />
+  <Card title="Exchange Connectivity" href="/docs/warren/exchanges" description="Non-custodial API connections and the leverage cap, in depth." />
+</Cards>
 
 Next: [Dashboard Overview](/docs/warren/dashboard)

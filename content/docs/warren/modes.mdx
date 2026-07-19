@@ -1,7 +1,11 @@
 ---
 title: Trading Modes
-description: "Choose how you want to interact with Warren: paper trading, live trading, or demo exploration."
+description: "Warren always starts in paper: simulated funds, live market data, and no exchange keys required. Going live is a separate, deliberate step you take only when a strategy has earned it."
 ---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
 
 ![Strategy live](/docs/images/warren/strategy-live.png)
 
@@ -10,6 +14,10 @@ After selecting strategies, you choose how you want to interact with Warren. Cur
 - Live Trading
 - Paper Trading
 - Demo Environment
+
+<Callout type="info">
+**Paper is always the default, and it needs no exchange account.** Every execution path in Warren, both strategy bots and Warren's own book, runs in paper mode first: simulated capital against live market data, zero risk. Going live is never automatic. You connect an exchange with your own keys and explicitly switch a specific bot or position to live, only when you are ready.
+</Callout>
 
 ## Paper trading
 
@@ -27,7 +35,7 @@ Paper trading currently uses:
 - Runtime monitoring
 - Real-time strategy behavior
 
-No real funds are used during paper trading.
+No real funds are used during paper trading, and no API keys are needed to start. This is the honest bridge between a backtest and live capital: the same strategy runs against the same live market you would trade, without a cent at stake.
 
 ## Live trading
 
@@ -45,6 +53,10 @@ You remain fully in control of:
 - Execution limits
 - Strategy runtime behavior
 
+<Callout type="warn">
+Live mode moves real funds, so every entry and exit passes a mandatory pre-trade risk review, the leverage cap, and a confirm-to-approve step: Warren proposes, you approve. Nothing trades live by accident.
+</Callout>
+
 ## Demo environment
 
 The demo environment lets you:
@@ -55,5 +67,22 @@ The demo environment lets you:
 - Navigate Warren without connecting an exchange
 
 Demo is the friction-free path if you want to look around before authenticating an exchange.
+
+<Accordions type="single">
+<Accordion title="Deep dive: paper vs. live, under the hood">
+
+The two modes are not cosmetic. In paper mode, strategy bots trade a simulated budget and Warren's discretionary book runs against a simulated sandbox, orders fill against the live price without ever reaching a venue. In live mode, the same actions route to your connected exchange through your own encrypted API keys.
+
+Everything else, the risk gate, the leverage cap, the confirm-to-approve step, behaves identically in both modes, so what you practice in paper is exactly what you get live.
+
+</Accordion>
+</Accordions>
+
+## Continue
+
+<Cards>
+  <Card title="Capital Allocation" href="/docs/warren/allocation" description="Set the pool, pair, and boundaries your strategies trade within." />
+  <Card title="Exchange Connectivity" href="/docs/warren/exchanges" description="Connect a venue with your own keys when you are ready to go live." />
+</Cards>
 
 Next: [Capital Allocation](/docs/warren/allocation)

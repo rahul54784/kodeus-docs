@@ -1,0 +1,68 @@
+---
+title: System Architecture
+description: "Four cooperating layers, designed so that honesty and safety are properties of the system, not a hope pinned on a prompt."
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+
+Warren is the flagship application built on **Kodeus**, an agentic orchestration platform for running autonomous systems at scale. Warren supplies the trading intelligence and the honest-fund-manager persona; Kodeus supplies the generic machinery to run it continuously, safely, and per-user. The four layers below trace that split.
+
+The architecture follows from a few commitments: agent behavior is a pluggable overlay on a generic runtime (no fork, the agent is configuration, not code); the domain intelligence lives in a runtime-agnostic analysis engine any agent can attach; every piece of state is scoped to a single user; heavy work is asynchronous and routed to right-sized compute; and safety rules are hard mechanisms that can replace an answer or veto an action.
+
+<Callout type="info">
+**Powered by Kodeus.** The split is deliberate: Warren is *what to say and what to refuse*, Kodeus is *how to run it safely for many users at once*. Because the agent is a declarative overlay rather than a fork, its honesty and safety properties are enforced by the platform, not left to the model's goodwill.
+</Callout>
+
+<DiagramLayerMap />
+
+## Layer 1: the agent
+
+Warren itself is a declarative spec, role, goals, skills, and the intelligence engine it attaches, plus a small extension that plugs into the runtime through open hook protocols. Three hooks are enforcement, not advice:
+
+- A **house-rules injector** reasserts the honest-uncertainty persona and the abstention contract every turn.
+- A **final-answer guard** replaces the entire answer with a standardized honest abstention whenever the abstain condition fires (the model cannot soften it) and forbids fabricated numbers.
+- The **tool-call gate** vetoes state-changing actions on unattended runs unless autonomous execution was deliberately armed (see [Autopilot](/docs/warren/autopilot)).
+
+## Layer 2: the Kodeus runtime
+
+A single generic execution engine, the Kodeus runtime, turns any agent spec into a running, multi-user agent. It owns only generic stores, configuration, conversation, memory, encrypted credentials, and the knowledge corpus, and no trading tables at all, which is what keeps it generic. Isolation is two-tier: one container per agent, and per-user contexts inside it, with every stored row keyed to the individual user.
+
+## Layer 3: the intelligence engine
+
+The engine is where the "be right" work concentrates: roughly 64 capabilities spanning market data, strategy authoring, backtesting and optimization, execution, analytics, and the marketplace. Every request is resolved to a per-user context that scopes all data access. Its honesty guarantees, closed-candle discipline, out-of-sample gating, deflated-Sharpe reporting, coverage verdicts, live *inside* the engine, so any agent that attaches it inherits them rather than re-implementing them.
+
+## Layer 4: compute and async jobs
+
+Backtests and optimization never run in the conversation path. Each is submitted as a job: a router estimates its weight (`pairs × days × candle density`) and dispatches light jobs to a serverless function and heavy or tuning jobs to a container task; the worker writes results to object storage and marks the job done; polling returns the results with their risk-adjusted statistics computed at read time and infrastructure details stripped. Stale jobs whose compute died out-of-band are reconciled to failed rather than left "running" forever. Strategies are content-addressed, so every result ties to the exact code that produced it.
+
+<Accordions type="single">
+<Accordion title="Deep dive: operational properties (tenancy, content-addressing, failure honesty)">
+
+- **Tenancy is enforced at the application layer.** Every domain row is keyed to its user and agent, and a privileged datastore client applies explicit per-user filters on every query. Object storage mirrors the same layout per tenant.
+- **Warm capacity.** A pool of pre-initialized containers absorbs cold starts, so a new conversation does not pay boot time.
+- **Content-addressed strategies.** Each version is stored under a hash prefix of its code with a bounded snapshot history, so every job result, marketplace listing, and live session ties back to the exact code that produced it.
+- **Failure honesty at the infrastructure level.** Unparseable requests become *failed jobs* rather than silently-defaulted ones; killed compute is reconciled to failed with a diagnostic rather than left "running" forever; and disconnected clients do not abort in-flight work.
+
+</Accordion>
+</Accordions>
+
+## End to end: ask, regime read, backtest, deploy
+
+A single request threads all four layers, and passes two hard guard moments where the system can override the model: the coverage verdict can end the turn with an honest abstention before any directional claim is made, and the tool-call gate can veto a deploy on an unattended run while reads still pass.
+
+<DiagramEndToEnd />
+
+The [regime engine](/docs/warren/regime-engine) supplies the coverage verdict at the first guard moment, and the [validity layer](/docs/warren/validity-layer) supplies the caveats and the earned-or-withheld deploy option before the second. An in-sample result is never framed as "go live," deploys are validated against the venue registry, and money movement stays [confirm-gated](/docs/warren/modes) throughout.
+
+<Callout type="warn">
+The load-bearing points are all mechanisms, not intentions: the coverage verdict can end a turn before any directional claim, backtests arrive with their statistical honesty attached, deploys pass venue-registry guardrails, and unattended runs cannot change state unless deliberately armed. None of these properties depend on the model choosing to comply.
+</Callout>
+
+## Where this fits
+
+<Cards>
+<Card title="The Regime Engine" href="/docs/warren/regime-engine" description="The engine capability that produces the coverage verdict guarding the first turn." />
+<Card title="The Validity Layer" href="/docs/warren/validity-layer" description="The deterministic checks that attach honesty to every backtest before Layer 1 surfaces it." />
+</Cards>

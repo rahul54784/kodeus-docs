@@ -1,0 +1,35 @@
+---
+title: Glossary
+description: "Plain-language definitions of the core terms used throughout the Warren documentation: regime, cascade, hysteresis, coverage verdict, PSR/DSR, and more."
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Cards, Card } from 'fumadocs-ui/components/card';
+
+The vocabulary used across these docs. Each term links back to the chapter where it is explained in full.
+
+| Term | Definition |
+| --- | --- |
+| **Market regime** | Warren's classification of a market's current condition: bullish, bearish, or ranging, refined into a seven-step ladder for graded conviction. It describes what state a market is *in*, not where price is going. See [Why Regime](/docs/warren/why-regime). |
+| **Cascade** | How the 1h, 4h, and 1d regime reads relate to one another. Cross-timeframe agreement is the strongest available predictor of how durable a regime is: full agreement tends to persist for days, a read propped up by a single timeframe rarely survives past hours. See [Market Intelligence](/docs/warren/market-intelligence). |
+| **Hysteresis** | Anti-flip-flop damping. Changing the stored regime label requires more conviction than keeping it, so the classifier does not thrash on noise. A wider change threshold than revert threshold, applied to market state. |
+| **Whipsaw** | Regime instability: frequent direction flips over recent history. It flags a fragile market even when the current label looks clean. |
+| **Coverage verdict** | A label-free `ok` / `caution` / `abstain` judgment over input completeness, freshness, and internal consistency. It is a decision gate, not a probability, and it can withhold a directional call when the inputs are too thin to support one. See [Built Not to Lie](/docs/warren/built-not-to-lie). |
+| **Abstain** | A deliberate non-answer, returned when inputs are too thin, stale, or conflicting to support an honest call. Abstaining is a correct outcome, not an error: a platform that answers anyway is guessing with your money. |
+| **Regime-based backtest** | Evaluating a strategy per regime on clean single-regime windows, rather than over one continuous multi-regime window that averages bull, bear, and ranging behavior into a single misleading number. See [Why Regime-Based Backtesting](/docs/warren/why-regime-backtesting). |
+| **Paper / live** | Two execution modes. Paper uses simulated funds with no exchange account and zero risk; live uses real funds on a connected exchange. Paper is always the default; live requires connected API keys and explicit intent. See [Modes](/docs/warren/modes). |
+| **PSR / DSR** | Probabilistic and Deflated Sharpe Ratio (Bailey and López de Prado). PSR is the probability the true Sharpe beats a benchmark, correcting for short samples and non-normal returns; DSR raises that bar to account for how many strategy variations were searched, so a cherry-picked best-of-many faces the bar it deserves. |
+| **In-sample / out-of-sample** | In-sample is scored on the same data a strategy was tuned on, which always flatters it. Out-of-sample is scored on unseen data. Only an out-of-sample result earns a "go live" suggestion. |
+| **Content-addressed strategy** | Each strategy version is stored under a hash of its own code, so any backtest or marketplace metric can always be traced back to the exact code that produced it. Editing, cloning, and rolling back are built in. See [Strategies](/docs/warren/strategies). |
+
+<Callout type="info">
+A note on the three-way verdict: Warren's checks never answer with a single score. They answer **ok** (inputs complete, premises hold), **caution** (usable but degraded, with reasons), or **abstain** (structurally untrustworthy, the verdict is withheld and the reasons are given). This vocabulary runs through the whole product.
+</Callout>
+
+## Related reading
+
+<Cards>
+  <Card title="Core Concepts" href="/docs/warren/core-concepts" description="The terminology above, in narrative form." />
+  <Card title="Built Not to Lie" href="/docs/warren/built-not-to-lie" description="Why verdicts replace confidence scores." />
+  <Card title="FAQ" href="/docs/warren/faq" description="The most common questions, answered honestly." />
+</Cards>

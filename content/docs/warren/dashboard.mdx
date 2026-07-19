@@ -1,7 +1,11 @@
 ---
 title: Dashboard Overview
-description: "After activation, the Warren dashboard shows portfolio metrics, market regime, runtime strategy visibility, and performance tracking."
+description: "The Warren dashboard tracks portfolio metrics, market regime, and every running strategy, with a plain-language health verdict per bot and metrics that always state their own basis."
 ---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
 
 ![Warren dashboard](/docs/images/warren/dashboard.png)
 
@@ -29,4 +33,56 @@ After activation, you are redirected to the Warren dashboard.
 
 The dashboard is where you keep ongoing visibility into every strategy Warren is running and every signal it has detected.
 
-Next: [FAQ](/docs/warren/faq)
+## The Trading Bay: every screen
+
+The dashboard is the front door to the Trading Bay, the workspace where everything Warren can do is reachable. Chat drives it; the screens let you inspect and control it.
+
+| Screen | What you do there |
+| --- | --- |
+| **Portfolio** | Your allocation across the [three buckets](/docs/warren/onboarding), equity, active bots, recent trades, and headline ROI and win rate. |
+| **Warren, AI Fund Manager** | The conversation. Market reads, strategy work, backtests, deployments, and every money-action confirmation happen here. |
+| **Live Strategies** | Running and stopped bots. Per-bot detail: P&L, trade list, guards, and stop, resume, and reconfigure controls. |
+| **Strategies** | Your library plus the preset catalog, per-strategy detail, versions, and backtest history. |
+| **Live Market** | Market overview and regime views across the monitored universe. |
+| **Risk** | Position-risk breakdown, exposure, leverage per position, and your account limits: Max Daily Loss, Max Drawdown, and Max Open Trades, with auto-stop on limit breach and risk alerts. |
+| **Marketplace** | Browse, inspect, publish, and clone community strategies with verified track records. |
+| **Leaderboard** | Ranked performance, built only from ranking-eligible results. Liquidated runs are excluded by the engine. |
+| **Alerts** | Signal and system notifications, mirrored to Telegram if connected. |
+| **Schedules** | [Autopilot](/docs/warren/autopilot) check-ins: create, edit, and review scheduled runs. |
+
+<Callout type="info">
+Screen names may evolve with the app; the capabilities behind them are the stable contract.
+</Callout>
+
+## Two parallel sets of numbers
+
+![Portfolio](/docs/images/warren/portfolio.png)
+
+Because your strategy bots and Warren's own discretionary book are kept separate, every performance number comes in a matched pair, one for the bots, one for Warren's book, so the two never blur. For each you get aggregate P&L and win rate over 24h, 7d, 30d, and all-time; trade-by-trade history; and the worst peak-to-trough drawdown alongside the longest losing streak.
+
+## Per-bot health verdict
+
+On top of the raw numbers sits a health check that reads each bot and returns a plain-language verdict rather than a smoothed score: *"this bot is losing, and here is exactly why."* You do not have to reverse-engineer a decline from a chart, the dashboard tells you what is happening and what triggered it.
+
+<Callout type="info">
+**Honest metric definitions.** A number on the dashboard is never shown without its denominator. Strategy-bot return is capital-weighted, measured against the money that actually traded, not the configured budget. Drawdown is computed on cumulative realized P&L. Open positions surface their unrealized P&L separately from realized results. Each report states its own basis, so you always know what the figure is a percentage of.
+</Callout>
+
+<Accordions type="single">
+<Accordion title="Deep dive: why the numbers are trustworthy">
+
+- **Capital-weighted, not budget-weighted.** Bot return is total profit divided by the capital actually staked in closed trades. Measuring against the full configured budget would flatter idle capital that never traded.
+- **Drawdown is liquidation-aware.** A run whose equity reaches zero is flagged as liquidated and capped at -100%, impossible ">100% drawdown" figures never appear, and a liquidated run is marked ineligible for the Leaderboard so it cannot sit on top of the board.
+- **Realized and unrealized stay separate.** Closed-trade results and open-position mark-to-market are reported on their own, so a paper gain on an open position is never counted as booked profit.
+
+</Accordion>
+</Accordions>
+
+## Continue
+
+<Cards>
+  <Card title="How-To Guides" href="/docs/warren/how-to" description="Recipes for market reads, deploying a paper bot, and watching the market while away." />
+  <Card title="FAQ" href="/docs/warren/faq" description="Why a bot stopped, why results differ live, and more." />
+</Cards>
+
+Next: [How-To Guides](/docs/warren/how-to)

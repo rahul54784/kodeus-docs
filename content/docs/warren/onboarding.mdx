@@ -3,6 +3,8 @@ title: Personalized Onboarding
 description: "Warren learns your trading experience, risk preferences, trading style, and market type during a guided onboarding flow."
 ---
 
+import { Callout } from 'fumadocs-ui/components/callout';
+
 ![Onboarding risk preferences](/docs/images/warren/onboarding-risk.png)
 
 After authentication, Warren begins a guided onboarding flow to personalize strategy recommendations.
@@ -70,5 +72,17 @@ You currently choose preferred market environments. Supported options:
 - Futures
 
 This preference helps Warren tailor strategy recommendations and execution environments.
+
+## How your capital is organized
+
+On first entry to the Trading Bay you choose how your capital is split across three buckets. The split is adjustable at any time:
+
+| Bucket | What it is |
+| --- | --- |
+| **Reserve Capital** | An untouched buffer, never traded. |
+| **Stable Yield** | Parked in low-risk yield rather than active trading. |
+| **Trading Strategies** | The active allocation your bots and Warren's book trade against. |
+
+<Callout type="info">Only the Trading Strategies bucket is ever put to work. Reserve Capital and Stable Yield stay out of the market, so your active risk is always a deliberate choice.</Callout>
 
 Next: [Strategy Recommendations](/docs/warren/strategies)

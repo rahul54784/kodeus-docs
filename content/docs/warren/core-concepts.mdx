@@ -1,0 +1,64 @@
+---
+title: Core Concepts
+description: "The core vocabulary behind Warren: market regime, the cascade, backtest modes, paper vs live, the three-way verdict, and closed candles."
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+
+A handful of ideas recur throughout Warren, your private AI fund manager. Understanding these six makes the rest of the product read easily. The mechanics behind each concept are covered in the design-philosophy and engine pages linked below.
+
+## Market regime
+
+A **regime** is Warren's classification of a market's current character: not where price is going, but what *state* it is in. Every read collapses to one of three basic directions, **bullish** (trending up), **bearish** (trending down), or **ranging** (no dominant direction), refined into a finer seven-step ladder for graded conviction.
+
+<DiagramRegimeLadder />
+
+Regime is the primitive the rest of Warren conditions on: strategy discovery is ranked by regime fit, backtest windows are chosen by regime, and a directional call is withheld when the regime cannot be read with confidence. See [Why Regime](/docs/warren/why-regime).
+
+## The cascade
+
+Warren reads the regime on three timeframes, 1h, 4h, and 1d, and the **cascade** describes how those reads relate. Full agreement across all three is the strongest, most durable read; a regime propped up by a single timeframe is fragile. The [Regime Engine](/docs/warren/regime-engine) covers how the cascade is built and how far forward a read can honestly be projected.
+
+## Backtesting, two ways
+
+A **backtest** replays a strategy over historical data. Warren runs them in two modes:
+
+- **Regime mode** tests over a window that represents a single, coherent market condition. It answers "when does this work?"
+- **Full-period mode** tests over a long window spanning many conditions. It answers "what would running it blindly feel like?"
+
+Why both exist, and why one continuous number misleads, is the argument of [Why Regime-Based Backtesting](/docs/warren/why-regime-backtesting). One continuous number averages bull, bear, and ranging behavior together and hides the conditional structure of a strategy's edge, which is exactly what you need to deploy capital well.
+
+## Paper and live
+
+Every execution path runs in one of two modes:
+
+- **Paper**: simulated money, no exchange account needed, zero risk.
+- **Live**: real funds on a connected exchange.
+
+Paper is always the default. Live requires connected API keys and explicit intent.
+
+## The three-way verdict
+
+Warren's checks never answer with a single score. They answer:
+
+- **ok**: inputs complete, premises hold.
+- **caution**: usable but degraded, with the reasons attached.
+- **abstain**: structurally untrustworthy, so the platform withholds the verdict and says why.
+
+**Abstaining is a correct outcome, not an error.** A platform that answers anyway is guessing with your money.
+
+## Closed candles
+
+The most recent candle on any timeframe is still *forming*: its values change until the bar closes. All accuracy-critical analysis uses only **completed candles**, which makes every read reproducible and immune to look-ahead bias. Each read carries its candle-close timestamp and data age, so freshness is never a guess.
+
+<Callout type="info">These verdicts and freshness stamps are not cosmetic. They are the honesty contract that makes Warren's numbers worth trusting.</Callout>
+
+## Go deeper
+
+<Cards>
+  <Card title="Why Regime" href="/docs/warren/why-regime" description="Why no single strategy wins in every market, and why regime is the primitive everything conditions on." />
+  <Card title="Why Regime-Based Backtesting" href="/docs/warren/why-regime-backtesting" description="Why one continuous number misleads, and the two-mode fix." />
+  <Card title="Built Not to Lie" href="/docs/warren/built-not-to-lie" description="The three-way verdict as a design commitment: verdicts, not scores." />
+  <Card title="The Regime Engine" href="/docs/warren/regime-engine" description="How a raw market becomes a labeled, graded, trustworthy regime read." />
+</Cards>

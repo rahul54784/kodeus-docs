@@ -1,11 +1,14 @@
 ---
 title: Strategy Recommendations
-description: "After onboarding, Warren surfaces personalized strategy recommendations from a curated catalog of verified strategies."
+description: "Warren surfaces strategies from a vetted preset library ranked by regime fit, lets you build your own in plain English, and versions everything so any result traces back to the exact code that produced it."
 ---
 
-![Warren chat workflow](/docs/images/warren/chat-workflow.png)
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
 
-After your onboarding preferences are completed, Warren prepares a personalized strategy environment.
+After your onboarding preferences are completed, Warren prepares a personalized strategy environment. Warren is a marketplace for strategies, not signals: instead of chasing one-off calls, you discover transparent, data-backed strategies and match them to the market you are actually in.
 
 ## Intelligent setup
 
@@ -37,5 +40,57 @@ Each current recommendation card includes:
 - Strategy description
 
 You must currently select at least one strategy before continuing. This reinforces Warren's strategy-first workflow.
+
+## Where strategies come from
+
+Warren draws candidates from three places, and every one of them is a first-class strategy you can backtest, tune, deploy, version, and publish:
+
+- **A vetted preset library.** Curated, pre-tested strategies. Each preset ships with per-regime and per-token performance history, so you see where it has worked before you commit.
+- **Your saved strategies.** Anything you have built, cloned, or tuned lives in your own library.
+- **The community marketplace.** Strategies published by other traders, each carrying a verified track record the platform computed itself.
+
+## Ranked by regime fit
+
+No single strategy wins in every market, so Warren does not hand you a generic "best" list. It classifies the market's current state first, then ranks candidates by how well their category fits that state. Warren can also explain any strategy's rules back to you in plain language before you decide.
+
+The regime-fit prior is simple and honest about where each style of strategy earns its edge:
+
+| Strategy category | Regimes where it should have an edge |
+| --- | --- |
+| Momentum, Trend-following, Breakout, Volatility | Bullish or bearish (any strong trend) |
+| Scalping | Ranging, bullish |
+| Grid, Mean-reversion | Ranging |
+
+<Callout type="info">
+A strategy that looks like it performs "the same everywhere" is usually either genuinely all-weather (rare, and typically defensive by design) or, far more often, has an edge too small to distinguish from noise. Warren treats a fitted regime match as a starting point, not a verdict, the honest test still happens in [Building and Backtesting](/docs/warren/building-and-backtesting).
+</Callout>
+
+## Build your own
+
+You are not limited to the catalog. You build a new strategy two ways, and both converge on the same runnable artifact:
+
+<Steps>
+<Step>**Describe the rules in plain English.** Name the indicators plus your entry and exit conditions, no code required. Warren compiles them into a complete, runnable strategy.</Step>
+<Step>**Supply full strategy source code.** For advanced setups, hand Warren a complete strategy class with arbitrary logic.</Step>
+</Steps>
+
+Either path is validated before saving (structure, indicator parameters, risk attributes) and categorized into the same taxonomy the regime-fit ranking uses. From there it behaves like any preset: backtest it, tune it, deploy it, and publish it.
+
+<Accordions type="single">
+<Accordion title="Deep dive: content-addressed versioning and rollback">
+
+Every strategy version is stored under a hash of its code, with a bounded history of recent snapshots retained. Editing, cloning, renaming, and rolling back to any earlier version are all built in.
+
+Because results are keyed to the code hash, **any backtest result can always be traced back to the exact code that produced it**. When you later publish a strategy or refresh its marketplace showcase, the performance numbers are bound to a specific version, never to a claim.
+
+</Accordion>
+</Accordions>
+
+## Continue
+
+<Cards>
+  <Card title="Building and Backtesting" href="/docs/warren/building-and-backtesting" description="Validate a strategy per regime and full-period before it earns any capital." />
+  <Card title="Trading Modes" href="/docs/warren/modes" description="Choose paper, live, or demo, and start with zero risk." />
+</Cards>
 
 Next: [Trading Modes](/docs/warren/modes)

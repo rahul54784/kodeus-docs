@@ -1,0 +1,81 @@
+---
+title: Built Not to Lie
+description: "Warren's third design commitment is a validity layer whose entire purpose is to refuse to make claims it cannot defend."
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+
+The default failure mode of quantitative trading tooling is looking better than it is. Warren's third design commitment is a layer whose entire purpose is to refuse to make claims it cannot defend.
+
+Every conclusion Warren draws, "this backtest is profitable," "this regime is bullish," "this Sharpe is real," passes through validity checks before it reaches you. Each check targets a specific, well-understood way a naive number misleads. If a check cannot confirm a conclusion, it does not shrug and pass the number through: it downgrades or withholds the verdict and says exactly why. The mechanics live in [The Validity Layer](/docs/warren/validity-layer); this page is the philosophy and the trust contract.
+
+## Verdicts, not scores
+
+An earlier version of the product surfaced a single confidence number, and first-party analysis found it was **non-discriminative**: over a large sample of decided paper signals it barely moved off one value and had essentially zero correlation with realized outcomes. You cannot calibrate a probability on a signal that does not vary.
+
+The lesson is encoded everywhere: *do not replace "trust this 0.30" with "trust this 0.62."* Decisions come from explicit hard rules producing three-way verdicts, `ok`, `caution`, or `abstain`, never from a threshold on one opaque score. **Abstaining is a correct outcome, not an error.**
+
+## The trust hierarchy
+
+Warren still reports several "how much to trust this" figures, but only two of them are decision **gates**; the rest are transparency for display. Confusing the two is the exact anti-pattern the design set out to kill.
+
+| Signal | Role | What it means, and what it must never be used for |
+| --- | --- | --- |
+| The high-confidence gate | **GATE** (structure) | The real decision gate: all-timeframe agreement, plus a strong cascade, plus non-ranging, evaluated as AND-conditions. Not a probability. |
+| The coverage verdict | **GATE** (inputs) | `ok` / `caution` / `abstain` over input completeness and freshness. Withholds a call on thin data. |
+| Confidence percentage | display-only | A transparency figure. Never a sort key or a standalone probability. |
+| Coverage index | display-only | A transparent average of input-completeness components. An index, not a probability. |
+| Forecast reliability | display-only | Context on a persistence forecast. Not a trade trigger. |
+
+The gates decide; the display-only figures explain. A display-only number is never allowed to become a filter, a sort key, or a standalone probability, because that is exactly how a non-discriminative score quietly re-enters through the back door.
+
+## Four invariants
+
+Every check in the layer obeys the same four rules:
+
+- **Deterministic and label-free.** Verdicts are pure functions of inputs. No fitted model, fully testable, and immune to contaminated feedstock.
+- **Additive.** A check annotates a result; it never rewrites the underlying numbers.
+- **Fail toward abstain.** A check that could not run degrades the verdict; it never gets the benefit of the doubt. A money-touching "fail-open" is treated as the cardinal bug.
+- **Grounded, not self-reported.** Anything checkable against data is checked in code, never by asking the model to critique itself, which rationalizes rather than verifies.
+
+<Callout type="info">
+The promise is not that every strategy is good. It is that Warren will not pretend a bad one is.
+</Callout>
+
+<Accordions type="single">
+<Accordion title="Deep dive: the validity-check contract">
+
+Every check returns the same shape, so verdicts compose mechanically rather than by prose. Downstream code reads the fields; the user reads the reasons.
+
+```
+{
+  verdict:          ok | caution | abstain
+  validity_score:   0..1    # a transparency index of input completeness; NEVER a filter or sort key
+  reasons:          [ ... ] # plain-language causes; these drive the user-facing message
+  inputs_used:      [ ... ] # what actually contributed
+  inputs_missing:   [ ... ] # what was absent, skipped, or errored
+  premise_relevant: bool    # true  = a real regime or statistical concern (blocks go-live)
+                            # false = a "could not verify" degradation (does not block)
+}
+```
+
+Two fields carry the weight. `validity_score` is a transparency index only: it exists to be shown, never to be thresholded, sorted on, or treated as a probability. `premise_relevant` is the switch between a genuine objection and a mere gap in coverage: a `true` premise-relevant concern blocks a money action, while a `false` "could not verify" degradation lowers the verdict without vetoing it. Keeping those two apart is what lets the layer be strict about real risks without becoming paralyzed by missing data.
+
+</Accordion>
+<Accordion title="Deep dive: why grounded, not self-critique">
+
+The obvious way to add "critical thinking" is a prompt step: *now critique your own answer.* The design explicitly rejects it, because intrinsic self-critique tends to rationalize the original answer rather than verify it.
+
+The division of labor is deliberate: the model may *enumerate* what could be wrong (creative breadth), but the enumeration is **forced through code checks against data** (honest verification). Each check has been hardened over adversarial red-team rounds hunting specifically for fail-open holes, inputs that would let a bad result pass clean because a check silently did not run.
+
+</Accordion>
+</Accordions>
+
+<Cards>
+  <Card title="The Validity Layer" href="/docs/warren/validity-layer" description="The full mechanics: every check, what it targets, and how verdicts compose." />
+  <Card title="Why Regime" href="/docs/warren/why-regime" description="Why matching the market's state, and abstaining when it can't be read, is the durable edge." />
+  <Card title="Why Regime-Based Backtesting" href="/docs/warren/why-regime-backtesting" description="The honesty discipline applied to performance numbers." />
+  <Card title="Marketplace" href="/docs/warren/marketplace" description="Verified track records, judged on worst drawdown rather than the headline number." />
+</Cards>

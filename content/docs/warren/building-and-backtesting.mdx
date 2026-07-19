@@ -1,0 +1,132 @@
+---
+title: Building & Backtesting Strategies
+description: "Author strategies in plain English or code, then test them honestly: per regime and full-period, head-to-head, auto-tuned with an overfit guard, and diagnosed when they fail."
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+
+A strategy in Warren is a first-class artifact: it can be found or authored, backtested, tuned, versioned, deployed, and published, and every result it produces is tied to the exact code that produced it. This page covers the two halves of that work, **authoring** a strategy and then **testing it honestly**.
+
+## Where strategies come from
+
+Strategies come from three places:
+
+- **A curated preset library**, where each preset ships with per-regime, per-token performance history.
+- **Your own saved strategies**, everything you have authored, cloned, or tuned.
+- **The community marketplace**, published work with verified track records ([Marketplace](/docs/warren/marketplace)).
+
+Warren ranks candidates by fit to the current regime and can explain any strategy's rules back to you in plain language.
+
+## Build one two ways
+
+You author new strategies in one of two ways, and both converge on the same artifact:
+
+- **Plain English (declarative).** Describe the rules, an indicator set plus boolean entry and exit conditions, and Warren compiles them into a complete, runnable strategy. No code seen.
+- **Full source code.** Supply a full strategy class for arbitrary logic when a declarative rule set is not enough.
+
+Both paths are validated before saving (structure, indicator parameters, risk attributes), and both produce a strategy categorized into a taxonomy, momentum, trend-following, breakout, volatility, scalping, grid, or mean-reversion, which is exactly what the regime-fit prior in [Why regime-based backtesting](/docs/warren/why-regime-backtesting) keys on. Either way the result is a first-class strategy: it can be backtested, optimized, deployed, versioned, and published like any preset.
+
+<DiagramStrategyLifecycle />
+
+<Callout type="info">
+**Content-addressed versioning.** Every strategy version is stored under a hash of its code, with a bounded history of snapshots retained. Editing, cloning, renaming, and rolling back to any earlier version are built in, and because results are keyed to the code hash, any backtest result can always be traced to the exact code that produced it.
+</Callout>
+
+## Backtest honestly
+
+![A strategy running with its record](/docs/images/warren/strategy-live.png)
+
+Backtests and optimizations are long-running **asynchronous jobs**: Warren submits them and polls the results for you, routed to right-sized compute (see [System architecture](/docs/warren/architecture)). Every result arrives with its validity verdict attached, and the option to deploy appears *only* once a result has earned it.
+
+<DiagramBacktestJobFlow />
+
+A single continuous backtest averages bull, bear, and ranging behavior into one number that hides both when a strategy works and when it quietly gives everything back. Warren tests in two complementary modes instead:
+
+- **Regime mode** tests over a window that represents a single, coherent market condition, answering *under what conditions does this strategy have an edge, and how bad is its worst regime?*
+- **Full-period mode** tests over a long window spanning many conditions, answering *what would running it blindly through regime changes actually feel like?*
+
+The full mechanics, and why one continuous number misleads, are in [Why regime-based backtesting](/docs/warren/why-regime-backtesting). The verdicts that arrive with every result are computed by [the validity layer](/docs/warren/validity-layer), so a number is never read without its caveats.
+
+### The toolset
+
+| Capability | What it does |
+| --- | --- |
+| **Run a backtest** | Regime or full-period mode, with rich per-run overrides (stake sizing, leverage, stop-loss interpretation, profit targets, fees), all without touching the strategy's code. |
+| **Plan windows** | The window planner proposes the best clean single-regime window per regime, or standard full-period durations, with quality warnings attached. |
+| **Compare head-to-head** | Several strategies over the *same* pairs and window, for an apples-to-apples ranking. |
+| **Grade robustness** | Per-regime grades rolled into a consistency score, with hard disqualification on catastrophic single-regime drawdown. |
+| **Auto-tune** | A hyperparameter search whose trial count feeds the overfitting correction in [the validity layer](/docs/warren/validity-layer), so a tuned result is discounted for how hard it was searched. Winning parameters can be promoted in one step. |
+| **Diagnose** | Trade-level analysis of a losing or zero-trade backtest, with concrete, plain-language improvement suggestions. |
+
+### Robustness over a headline number
+
+The most important habit Warren encourages is judging a strategy on its **worst regime, not its favorite**. The all-regimes robustness sweep runs the same strategy across the best clean window for each of bullish, bearish, and ranging, then rolls the results into a per-regime grade and a consistency score. Catastrophic drawdown in *any* single regime disqualifies the strategy outright, a great average cannot buy an A.
+
+Auto-tune carries its own honesty guard: the harder a search is (the more trials it runs), the more its winning result is discounted, so a lucky over-searched configuration cannot masquerade as a real edge. See [the validity layer](/docs/warren/validity-layer) for how that correction is computed. When a backtest loses or produces zero trades, diagnose reads the trades and returns plain-language reasons and fixes rather than a bare failure.
+
+## Deep mechanics
+
+<Accordions type="single">
+<Accordion title="Deep dive: the job lifecycle">
+
+A backtest request becomes a job row plus a dispatch. A router estimates the job's weight and sends it to right-sized compute:
+
+```
+weight = pairs × days × candle density   (candle density derived from the timeframe)
+
+  light job                 -> serverless function, returns in seconds
+  heavy / multi-pair /      -> container task with more CPU and memory
+  long-range / all tuning
+```
+
+History depth is capped per timeframe so requests stay statistically meaningful and bounded (roughly: 5-minute data to about six months, 15-minute to about a year, hourly and above to multiple years). Results are written to object storage with a compact summary on the job row; polling returns that summary plus risk-adjusted statistics computed at read time. Jobs whose compute died out-of-band (a spot reclaim or resource exhaustion) are reconciled to *failed* with a diagnostic rather than left "running" forever.
+
+</Accordion>
+<Accordion title="Deep dive: per-run configuration (stake modes, stop-loss interpretation)">
+
+Every run accepts config-level overrides that layer on top of the strategy's own attributes. The strategy code is never modified.
+
+**Capital modes.**
+
+- *Compound* re-splits the current wallet across open slots at each entry, so wins snowball.
+- *Fixed* stakes a constant amount per trade, with a safety cap that trims a stake at or above the wallet down to leave fee-and-margin headroom. The adjustment is reported on the result, because an uncapped full-wallet stake silently produces zero trades.
+- A *deployable-fraction* cap can be layered on either mode.
+
+**Leverage & market type.** Spot or futures, isolated or cross margin. Leverage above 1x implies futures automatically.
+
+**Stop-loss interpretation.** Two explicit modes, and every result reports which one ran:
+
+```
+price-based  (default, industry standard)
+  a -10% stop = a 10% adverse move in the underlying price.
+  the engine's margin-denominated stop is scaled by leverage so it fires at
+  exactly that price distance, and profit targets are scaled consistently so
+  reward:risk is preserved.
+
+margin-based (engine-native)
+  a -10% stop = 10% of position margin, which at 3x leverage fires after only
+  a ~3.3% price move.
+```
+
+Every result reports the resolved interpretation: which mode ran, whether the stop came from you or the strategy's own default, the effective configuration, and the wallet loss a single stop implies, so a stop-out is never a surprise.
+
+**Risk attribute overrides.** Stop-loss level, profit-target ladder, trailing-stop parameters, exit-signal behavior, and fees (per-side, with per-exchange defaults otherwise). Protections are on by default for live parity.
+
+</Accordion>
+<Accordion title="Deep dive: what a result contains">
+
+Beyond headline P&L, a result carries an equity curve, a per-pair breakdown, an exit-reason distribution, daily P&L, and win/loss accounting that must reconcile exactly.
+
+Drawdown reporting is **liquidation-aware**: a run whose equity reaches zero is flagged as liquidated, its drawdown is capped at -100% (the uncapped figure is preserved separately), and it is marked ineligible for rankings. Impossible "greater-than-100% drawdown" numbers never appear, and a liquidated run can never sit on top of a leaderboard.
+
+</Accordion>
+</Accordions>
+
+## Next
+
+<Cards>
+  <Card title="Why regime-based backtesting" href="/docs/warren/why-regime-backtesting" description="Why one continuous number misleads, and how testing per regime and grading the worst one fixes it." />
+  <Card title="The validity layer" href="/docs/warren/validity-layer" description="The checks that discount over-searched tunes and withhold claims Warren cannot defend." />
+</Cards>

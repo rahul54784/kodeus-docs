@@ -83,3 +83,35 @@ html > body[data-scroll-locked] {
   white-space: nowrap;
   word-break: normal;
 }
+
+/* ---- Heading hierarchy: make section headings evident ---- */
+/* h2: uppercase, tracked, with a hairline underline (standard docs section break) */
+.prose h2 {
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-top: 2.6em;
+  padding-bottom: 0.45em;
+  border-bottom: 1px solid var(--color-fd-border);
+}
+
+/* h3: clearly stepped below h2, sentence case, mint tick for scannability */
+.prose h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-top: 2em;
+}
+.prose h3::before {
+  content: "// ";
+  color: var(--color-fd-primary);
+  font-weight: 600;
+}
+
+/* h1 page title: keep prominent above the uppercase h2s */
+.prose h1,
+#nd-page h1 {
+  font-size: 1.9rem;
+  letter-spacing: 0.01em;
+}

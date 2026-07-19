@@ -1,0 +1,65 @@
+---
+title: Market Intelligence
+description: "Read any market with Warren: regime, indicators, prices, and news, all computed on closed candles and stamped with freshness."
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+
+![Ask Warren for a market read](/docs/images/warren/home-warren-prompt.png)
+
+Everything Warren does starts from a market read, and every read shares one guarantee: it is computed on **completed candles** and carries its candle-close timestamp and data age, so "how fresh is this?" is never a guess. Point-in-time channels that are legitimately live, tickers, funding rate, and open interest, are labeled as such rather than forced through the closed-candle path.
+
+<Callout type="info">
+Everything here is driven by [talking to Warren](/docs/warren/overview#talking-to-warren) in plain English. You ask for a market read; Warren picks the right capability and returns a calibrated, freshness-stamped answer. These are things Warren can do for you, not endpoints you call.
+</Callout>
+
+## What you can read
+
+| Capability | What it returns |
+| --- | --- |
+| **Regime read, timeline & persistence** | The labeled regime with its cascade and coverage verdict, a rolling regime timeline, and a forecast of how long the current state is likely to hold (see [The Regime Engine](/docs/warren/regime-engine)). |
+| **Technical indicators** | Standard indicators (RSI, MACD, Bollinger, EMAs, ADX, and more) computed on live closed-candle data for any pair and timeframe. |
+| **Prices & charts** | A multi-pair snapshot (price, 24h change, high/low, volume) and raw candle history for charting or analysis. |
+| **Why is it moving?** | A news and catalyst answer grounded in a fresh web search, not the model's memory. |
+
+## Regime is the primitive
+
+A **regime** is Warren's read of a market's current character: not where price is going, but what state it is in. Every read collapses to one of three basic directions, bullish, bearish, or ranging, refined into a finer seven-step ladder for graded conviction. It is reported with the *cascade* across three timeframes, 1h, 4h, and 1d: full agreement across all three is the strongest, most durable read, while a regime propped up by a single timeframe is fragile.
+
+Because regime is the state the rest of the system conditions on, a market read is the natural first step before [building or backtesting a strategy](/docs/warren/building-and-backtesting) or acting on a [signal](/docs/warren/signals). The reasoning behind conditioning everything on regime is laid out in [Why regime-based backtesting](/docs/warren/why-regime-backtesting).
+
+<Callout type="info">
+A regime read is descriptive, not a fortune-teller. Warren is precise about the *state* of a market and honest about uncertainty: when the regime cannot be read with confidence, the [validity layer](/docs/warren/validity-layer) withholds a directional call rather than guessing.
+</Callout>
+
+## Deep mechanics
+
+<Accordions type="single">
+<Accordion title="Deep dive: closed-candle mechanics">
+
+The most recent candle on any timeframe is still *forming*: its open, high, low, and close keep changing until the bar closes. Keeping that bar would leak the future into a read, so every accuracy-critical read drops it.
+
+Warren fetches **one extra bar** and discards the still-forming last bar using a clock-skew-tolerant rule that *errs toward dropping*: if there is any doubt whether a bar has closed, it is thrown away (a just-closed bar is simply picked up on the next cycle), and a forming bar is never kept. Because the fetch is over-provisioned by one bar, indicators still receive their full lookback window rather than silently losing a bar of warmup.
+
+Each read then carries three freshness fields, so downstream staleness checks are computations, not guesses:
+
+```
+freshness:
+  is_closed      is the last returned bar fully closed?
+  close_time     timestamp of that bar's close
+  age_seconds    how old the read is, right now
+```
+
+Channels that are legitimately point-in-time, tickers, funding rate, and open interest, are labeled as live rather than forced through the closed-candle path, so a live number is never mistaken for a candle-close value. The result is that every read is reproducible and immune to look-ahead bias.
+
+</Accordion>
+</Accordions>
+
+## Where a market read leads
+
+<Cards>
+  <Card title="Signals & alerts" href="/docs/warren/signals" description="A continuous scan of hundreds of tokens, curated into typed signals with real, outcome-tracked hit rates." />
+  <Card title="Build & backtest" href="/docs/warren/building-and-backtesting" description="Turn a read into a strategy, then test it honestly per regime and full-period." />
+</Cards>

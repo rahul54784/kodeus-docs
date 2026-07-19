@@ -1,0 +1,45 @@
+---
+title: Autopilot
+description: "Run Warren on a schedule: watch-and-report by default, autonomous execution only if you deliberately arm it."
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+
+Autopilot runs Warren unattended on a timer, so it can watch the market while you are away and tell you what changed. Its behavior is not a matter of trust or a well-worded prompt: it is enforced by a **tool-call gate in code**.
+
+## Two modes
+
+| Mode | Behavior |
+| --- | --- |
+| **Watch and report** *(default)* | On each scheduled run, Warren scans and messages you (regime shifts, opportunities, risks) via Telegram or in-app. It is **hard-blocked from trading**: only read-and-analyze actions pass; anything that would move money or change state is vetoed. The gate is deny-by-default, so even a tool it has never seen before is refused, not allowed. |
+| **Autonomous execution** *(opt-in)* | A deliberate, deploy-time arming lets an unattended run also act on your rules, still behind the same pre-trade safety review, leverage cap, and paper-versus-live control from [Intelligent Execution](/docs/warren/execution). Off unless you switch it on; nothing ever trades unsupervised by accident. |
+
+In the default mode Warren observes and reports, and nothing it does can touch your capital. Autonomous execution is the sole exception, and it is never on by accident.
+
+## The autopilot gate, per action
+
+<DiagramAutopilotGate />
+
+<Callout type="info" title="Why the gate is trustworthy">
+The "this run is unattended" flag is set only by Warren's own internal scheduler and never from a message or request, so a crafted input cannot trick the agent into believing it is supervised, and tool aliasing cannot smuggle a state-changing action past the gate.
+</Callout>
+
+<Accordions type="single">
+<Accordion title="Deep dive: gate mechanics">
+
+The gate is **deny-by-default against an explicit read-only allowlist**. On an unattended turn, an action is permitted only if its de-namespaced name matches a known read-only capability. An unanticipated or aliased state-changing action is refused, not allowed, so a tool cannot be smuggled past the gate by renaming or wrapping it.
+
+The "this run is unattended" flag is set only by Warren's own in-process scheduler, never from a message or a request, so a crafted input cannot trick the agent into believing it is supervised. Arming autonomous execution is a deploy-time configuration with a per-agent override, never a runtime request. The result is that safety is a property of the system, not a hope pinned on the model choosing to comply.
+
+</Accordion>
+</Accordions>
+
+## Where to go next
+
+<Cards>
+  <Card title="Intelligent Execution" href="/docs/warren/execution" description="The pre-trade review, leverage cap, and confirm gate that armed runs still pass." />
+  <Card title="Trading Modes" href="/docs/warren/modes" description="Paper versus live, and how each execution path runs." />
+  <Card title="Performance and Analytics" href="/docs/warren/analytics" description="Review what an unattended run reported, and how your bots are doing." />
+</Cards>

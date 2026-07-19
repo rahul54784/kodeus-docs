@@ -1,48 +1,134 @@
 ---
 title: FAQ
-description: "Common questions about Warren, exchange custody, supported markets, authentication, paper trading, and risk controls."
+description: "Common questions about Warren: why it abstains, blocked and zero-trade backtests, the leverage cap, auto-stopped bots, marketplace vetting, custody, exchanges, authentication, and trading modes."
 ---
 
-## Does Warren take custody of my funds?
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
 
-No. Your funds always remain on your connected exchange. Warren only receives execution authorization through exchange APIs. API access is used only for execution. Permissions can be revoked anytime.
+The questions people ask most, answered the way Warren answers everything: honestly, and with the reason attached. The first group covers *why Warren behaves the way it does*; the second covers *your account, custody, and setup*.
 
-## Which exchanges are supported?
+## Why Warren behaves the way it does
 
-Warren currently supports Binance, Bybit, OKX, Kraken, and Hyperliquid. Additional exchanges and trading pairs are being added.
+<Accordions type="single">
 
-## How do I authenticate?
+<Accordion title="Does Warren predict prices?">
 
-Warren supports two authentication paths: wallet authentication and email authentication with OTP verification. Both land you in the same personalized onboarding flow.
+No. It classifies the market's *state*, forecasts how long that state may persist, evaluates strategies honestly, and reports risk, all with explicit uncertainty. Directional price prediction in crypto is close to a coin flip. Warren's value is being right about everything *around* the prediction: the regime, the discipline, and the honesty about what it does not know. See [Built Not to Lie](/docs/warren/built-not-to-lie).
 
-## What trading modes are available?
+</Accordion>
 
-Warren currently supports three trading modes:
+<Accordion title="Why did Warren refuse to give me a direction?">
 
-- **Paper Trading.** Simulated capital, live market data, runtime monitoring. No real funds at risk.
-- **Live Trading.** Real capital, connected exchange, allocation boundaries you set.
+Because the inputs were too thin, stale, or contradictory to support an honest call, so the coverage verdict came back *abstain*. This is designed behavior, not a failure. Ask *"why did you abstain?"* and you will get the specific reasons. A platform that answers anyway is guessing with your money. See [Market Intelligence](/docs/warren/market-intelligence).
+
+</Accordion>
+
+<Accordion title="Why was my backtest blocked before it ran?">
+
+The window you picked spans multiple regimes with no dominant one, so the result would be a misleading blended average of bull, bear, and ranging behavior. Warren returns the window's regime composition and asks you to narrow it to a single-regime span (it will suggest one), or to override explicitly if you truly want the blended number. A blended number is never produced without a conscious choice. See [Why Regime-Based Backtesting](/docs/warren/why-regime-backtesting).
+
+</Accordion>
+
+<Accordion title="Why did my backtest make zero trades?">
+
+The most common historical cause, a per-trade stake set equal to the whole wallet with no headroom left for fees, is now auto-corrected: the stake is capped to leave headroom, and the adjustment is reported on the result. If you still see zero trades, ask Warren to diagnose it. The usual remaining causes are entry conditions that never fired in that window, or a pair with no data on the chosen venue.
+
+</Accordion>
+
+<Accordion title="Why do backtest and live results differ?">
+
+Backtests model exchange fees but not slippage or funding, and the result says so explicitly. Live markets also shift regimes. A strategy flagged as *cost-fragile* (a thin per-trade edge spread across a high trade count) is the most likely to disappoint live. The full-period backtest view and paper trading are the honest bridges: run both before committing real capital.
+
+</Accordion>
+
+<Accordion title="Why can't I raise leverage to 50×?">
+
+Venues advertise up to 125×; Warren caps user leverage at a conservative low single-digit multiple, enforced in code. At high leverage the liquidation distance shrinks below normal market noise, so a routine wiggle becomes a liquidation. The cap is what makes the rest of the risk framework meaningful. See [Runtime Configuration](/docs/warren/configuration) for the full risk-limit table.
+
+</Accordion>
+
+<Accordion title="Why did my bot stop on its own?">
+
+One of its guards fired: the profit target, the max-loss cap, or the trade-count limit on the bot itself, or an account-wide limit (Max Daily Loss or Max Drawdown, with auto-stop enabled). The bot's detail view and the result record show exactly which one. That is the system working as designed, not a malfunction.
+
+</Accordion>
+
+<Accordion title="A marketplace strategy shows +180%. Is that real?">
+
+The number is computed by the platform from verified backtests tied to the exact code version, so it is not a self-reported claim. But judge it the way Warren does: look at the worst drawdown and the per-pair spread behind the headline, and re-backtest it yourself after cloning. A great average with one catastrophic regime is a disqualification, not a buy. See [Marketplace](/docs/warren/marketplace).
+
+</Accordion>
+
+</Accordions>
+
+## Your account, custody, and setup
+
+<Accordions type="single">
+
+<Accordion title="Does Warren take custody of my funds?">
+
+No. Your funds always remain on your connected exchange. Warren only receives execution authorization through exchange APIs, and that access is used only for execution. Permissions can be revoked anytime. See [Exchange Connectivity](/docs/warren/exchanges).
+
+</Accordion>
+
+<Accordion title="Which exchanges are supported?">
+
+Warren operates across seven venues: Binance, Bybit, OKX, KuCoin, Gate.io, Kraken, and Hyperliquid. Hyperliquid is perpetuals-only and settles in USDC; the other six support both spot and futures. Additional trading pairs are being added over time.
+
+</Accordion>
+
+<Accordion title="How do I authenticate?">
+
+Warren supports two authentication paths: wallet authentication, and email authentication with OTP verification. Both land you in the same personalized onboarding flow. See [Authentication](/docs/warren/authentication).
+
+</Accordion>
+
+<Accordion title="How do I revoke Warren's access to my exchange?">
+
+Open Settings, navigate to Exchanges, and revoke the API credentials. You can also rotate the API key from your exchange directly. Warren respects revocation immediately. As a rule, generate API keys with trading permissions only, and never grant withdrawal permission to Warren.
+
+</Accordion>
+
+<Accordion title="What trading modes are available?">
+
+Three modes:
+
+- **Paper Trading.** Simulated capital, live market data, full runtime monitoring, and no real funds at risk. This is always the default.
+- **Live Trading.** Real capital on a connected exchange, inside the allocation boundaries you set.
 - **Demo Environment.** Explore the platform and browse strategies without connecting an exchange.
 
-## How does Warren choose strategies for me?
+See [Modes](/docs/warren/modes).
 
-Warren uses your onboarding inputs (trading experience, risk profile, trading style, preferred market type) to surface personalized strategy recommendations. Each recommendation includes strategy category, market type, timeframe, success metrics, regime match confidence, and historical win rate.
+</Accordion>
 
-## What risk profiles can I set?
+<Accordion title="Can I run Warren without connecting an exchange?">
 
-Three risk profiles: Conservative, Balanced, and Aggressive. Each profile adjusts position sizing, portfolio volatility exposure, strategy selection tendencies, and allocation behavior. You can change your profile through settings at any time.
+Yes. The Demo Environment lets you explore the platform, browse strategies, and understand the workflows without connecting an exchange. Paper Trading also runs without real capital, so you can validate and deploy strategies end to end before ever going live.
 
-## Can I run Warren without connecting an exchange?
+</Accordion>
 
-Yes. The Demo Environment lets you explore the platform, browse strategies, and understand workflows without connecting an exchange. Paper Trading also runs without real capital.
+<Accordion title="What risk profiles can I set?">
 
-## What runtime preferences can I configure?
+Three profiles: Conservative, Balanced, and Aggressive. Each adjusts position sizing, portfolio volatility exposure, strategy-selection tendencies, and allocation behavior. You can change your profile through settings at any time.
 
-You can configure preferred exchanges, preferred trading pairs, amount per trade, maximum open trades, trading mode preferences, and spot or futures preferences. The platform calculates required capital dynamically using your runtime configuration.
+</Accordion>
 
-## How do I revoke Warren's access to my exchange?
+<Accordion title="How does Warren choose strategies for me?">
 
-Open Settings, navigate to Exchanges, and revoke the API credentials. You can also rotate the API key from your exchange directly. Warren respects revocation immediately.
+Warren uses your onboarding inputs (trading experience, risk profile, trading style, and preferred market type) to surface personalized recommendations, ranked by fit to the current market regime. Each recommendation carries its strategy category, market type, timeframe, success metrics, regime-match confidence, and historical win rate. See [Strategies](/docs/warren/strategies).
 
-## Where do I see my live performance?
+</Accordion>
 
-The Warren dashboard shows portfolio metrics, market regime visibility, runtime strategy visibility, active strategy monitoring, performance tracking, and strategy runtime state.
+<Accordion title="What runtime preferences can I configure?">
+
+Preferred exchanges, preferred trading pairs, amount per trade, maximum open trades, trading mode, and spot or futures preferences. The platform calculates required capital dynamically from these settings. The full list, together with the account-wide risk limits, is on the [Runtime Configuration](/docs/warren/configuration) page.
+
+</Accordion>
+
+<Accordion title="Where do I see my live performance?">
+
+The Warren dashboard shows portfolio metrics, market-regime visibility, runtime strategy visibility, active strategy monitoring, performance tracking, and per-strategy runtime state. Bot performance and Warren's own book are reported separately, so the two never blur together. See [Dashboard Overview](/docs/warren/dashboard).
+
+</Accordion>
+
+</Accordions>

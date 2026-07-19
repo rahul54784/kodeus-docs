@@ -1,0 +1,52 @@
+---
+title: Quickstart
+description: "From sign-in to your first paper bot in about ten minutes, with no real money at risk."
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+![Welcome to Warren](/docs/images/warren/welcome-login.png)
+
+You can experience the entire Warren workflow, a market read, a validated strategy, and a running bot, without risking a cent. Everything below happens in **paper mode**, and each step is simply a message you send Warren in plain English.
+
+<Callout type="info">Paper mode uses simulated funds and needs no exchange account. Going live is a separate, deliberate step covered in [Trading Modes](/docs/warren/modes).</Callout>
+
+## Your first ten minutes
+
+<Steps>
+<Step>
+**Sign in.** Open Warren and authenticate with your wallet or email, then complete the short [onboarding](/docs/warren/onboarding) so recommendations fit your risk profile and trading style. On first entry you also choose how your capital is split across three buckets, adjustable at any time; see [how your capital is organized](/docs/warren/onboarding#how-your-capital-is-organized).
+</Step>
+<Step>
+**Ask for a market read.** Try *"What's the market doing for BTC?"* Note the regime and the verdict that travels with it. If Warren abstains, ask why: the reasons are always concrete.
+</Step>
+<Step>
+**Find a fitting strategy.** Ask *"Find me a strategy that suits this market."* Warren ranks candidates by fit to the current regime and can explain any strategy's rules in plain language.
+</Step>
+<Step>
+**Validate it honestly.** Ask *"Backtest it across bull, bear, and ranging windows."* Read the worst regime, not the average, then follow up with a full-period run to see what running it blindly would feel like.
+</Step>
+<Step>
+**Deploy on paper.** Say *"Paper-trade it with a 5% profit target and 5% max loss."* Review the confirmation card, which includes a pre-trade risk check, and approve.
+</Step>
+<Step>
+**Come back tomorrow.** Ask *"How are my bots doing?"* to see P&L, which guards fired, and the full trade history. Stop anytime with *"Stop it"* or *"Stop all my bots."*
+</Step>
+</Steps>
+
+![A live strategy running on paper](/docs/images/warren/strategy-live.png)
+
+<Callout type="warn">Every money action, including deploying a bot, needs your explicit confirmation. Warren proposes the exact action; you approve it.</Callout>
+
+## Paper first, live when ready
+
+Everything starts in paper mode: strategy bots trade simulated funds and Warren's own book runs against a simulated sandbox, with no exchange account required. Going live is an explicit step: connect an exchange with your own API keys, on any of the [seven supported venues](/docs/warren/exchanges), and switch the specific bot or position to live, as covered in [Trading Modes](/docs/warren/modes). Optionally connect Telegram to receive [signals and alerts](/docs/warren/signals) off-platform.
+
+## Where to next
+
+<Cards>
+  <Card title="Core Concepts" href="/docs/warren/core-concepts" description="Regime, the cascade, backtest modes, and the three-way verdict: the vocabulary behind every step above." />
+  <Card title="Trading Modes" href="/docs/warren/modes" description="How paper and live differ, and what connecting an exchange unlocks." />
+</Cards>

@@ -1,0 +1,64 @@
+---
+title: Performance and Analytics
+description: "P&L, drawdown, win rate, and trade history in two parallel families, so the bots' numbers and Warren's own numbers never blur together."
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+
+Warren reports performance the way a disciplined fund manager would: with every number attached to the exact money that produced it. Because the two [execution books](/docs/warren/execution) are separate stores, every analytic comes in a **matched pair**, one set for your strategy bots and one for Warren's own discretionary book, so the two never blur into a single flattering figure.
+
+![Portfolio performance](/docs/images/warren/portfolio.png)
+
+## Two parallel families
+
+The same reports exist for each book, computed on that book's own trades: aggregate P&L and win rate over 24h / 7d / 30d / all-time; trade-by-trade history with filters and pagination; and worst peak-to-trough drawdown with the longest losing streak.
+
+| Metric | Strategy bots | Warren's book |
+| --- | --- | --- |
+| **Aggregate P&L and win rate** | Over 24h / 7d / 30d / all-time | Over 24h / 7d / 30d / all-time |
+| **Trade history** | Trade-by-trade, with filters and pagination | Trade-by-trade, with filters and pagination |
+| **Worst drawdown** | Peak-to-trough with the longest losing streak | Peak-to-trough with the longest losing streak |
+| **Open positions** | Unrealized P&L surfaced separately | Unrealized P&L surfaced separately |
+| **Health verdict** | Plain-language per-bot verdict | Plain-language per-book verdict |
+
+A health-check analysis sits on top of the raw numbers and produces plain-language verdicts, *"this bot is losing and here is exactly why,"* rather than a smoothed score you have to interpret yourself.
+
+## Honest by construction
+
+The point of splitting the two books is that a number is never read without its denominator. A bot's win rate is a fact about the bot; Warren's book has its own, and neither borrows credibility from the other. Open positions never inflate a realized-return figure, because unrealized P&L is always reported on its own line.
+
+<Callout type="info" title="Honest metric definitions">
+Return is **capital-weighted**, measured against the money that actually traded, not the configured budget. Drawdown is computed on cumulative realized P&L. Open positions surface their unrealized P&L separately from realized results. Each report states its own basis, so a number is never read without its denominator.
+</Callout>
+
+<Accordions type="single">
+<Accordion title="Deep dive: honest metric definitions">
+
+**Capital-weighted (strategy bots).** A bot's return is total profit divided by the capital actually staked in closed trades, not the configured budget. Measuring against the budget would flatter idle capital: a bot that staked a fraction of its allocation and made a small profit would look like it earned that profit on the whole budget. Weighting by what actually traded prevents that.
+
+**Margin-weighted (Warren's book).** The discretionary book's return is realized P&L divided by the margin actually used. Because positions run on futures with leverage, margin used is the honest capital base for the book, not notional exposure and not the pool total.
+
+**Drawdown.** Reported as the worst peak-to-trough move on cumulative realized P&L, alongside a separate equity-based rolling drawdown. The longest losing streak travels with it, so "how bad did it get, and for how long" are both answered.
+
+**Liquidation cap.** A liquidated run is capped at −100% and flagged, rather than emitting an impossible figure. A blown-up position cannot report a number worse than a total loss of its capital, and it is never quietly averaged into a headline return.
+
+```
+Strategy-bot return   = total profit ÷ capital staked in closed trades   (capital-weighted)
+Warren's-book return  = realized P&L ÷ margin actually used              (margin-weighted)
+Drawdown              = worst peak-to-trough on cumulative realized P&L
+                        (plus a separate equity-based rolling drawdown)
+Liquidated run        = capped at −100%, flagged, never silently blended
+```
+
+</Accordion>
+</Accordions>
+
+## Where to go next
+
+<Cards>
+  <Card title="Intelligent Execution" href="/docs/warren/execution" description="The two books these analytics measure: strategy bots and Warren's own book." />
+  <Card title="Dashboard Overview" href="/docs/warren/dashboard" description="Where portfolio metrics, regime, and per-strategy health live day to day." />
+  <Card title="Strategy Marketplace" href="/docs/warren/marketplace" description="Verified track records judged on worst drawdown, not the headline number." />
+</Cards>

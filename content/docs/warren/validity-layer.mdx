@@ -1,0 +1,134 @@
+---
+title: The Validity Layer
+description: "One deterministic check for each way a naive backtest number misleads, composed into a single honest verdict."
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+
+This page is the mechanics behind [Built Not to Lie](/docs/warren/built-not-to-lie): one deterministic check per way a naive number misleads, composed into a single honest verdict. Every conclusion Warren draws, "this backtest is profitable," "this regime is bullish," "this Sharpe is real," passes through the validity layer before it reaches you. Each check is a pure function of its inputs that returns one of three verdicts, **ok** (inputs complete, premises hold), **caution** (usable but degraded, with reasons), or **abstain** (structurally untrustworthy, so the verdict is withheld and the reason given), plus plain-language reasons. Abstaining is a correct outcome, not an error.
+
+Every check follows the four invariants of [Built Not to Lie](/docs/warren/built-not-to-lie):
+
+- **Deterministic and label-free.** Verdicts are pure functions of inputs, with no fitted model, so they are fully testable and immune to contaminated training data.
+- **Additive.** A check annotates a result; it never rewrites the underlying numbers.
+- **Fail toward abstain.** A check that could not run degrades the verdict; it never gets the benefit of the doubt. A money-touching "fail-open" is treated as the cardinal bug.
+- **Grounded, not self-reported.** Anything checkable against data is checked in code, never by asking the model to critique itself, which rationalizes rather than verifies.
+
+## The checks
+
+Each row is one deterministic check aimed at one specific way a number lies.
+
+| Check | The way a naive number lies | What Warren does |
+| --- | --- | --- |
+| Leakage / closed-candle | Reading a still-forming bar leaks the future and is not reproducible | All accuracy-critical reads drop the forming bar, erring toward dropping, and stamp candle-close time and data age |
+| Coverage and abstention | A confident call built on one timeframe or stale data looks identical to a well-grounded one | A label-free verdict over input completeness, freshness, and internal consistency; thin or stale inputs abstain, with the specific reasons |
+| Premise validity | A long-only strategy "tested" over what was actually a bear market was never exercised in its own regime | Infers the strategy's directional thesis from its trades, computes the window's realized regime, and abstains on a decisive mismatch: a wrong-regime pass cannot read clean |
+| Beta vs. alpha | A long strategy "works" only because it rode the trend: +15% in a window that held +60% | Benchmarks against buy-and-hold, flags negative alpha, and will not certify leveraged beta as edge |
+| Overfit statistics | The best of many trials looks impressive even on pure noise; raw Sharpe assumes normal returns | Probabilistic and Deflated Sharpe, enforced as a verdict rather than a prose caveat |
+| Out-of-sample discipline | A strategy tuned and scored on the same window always looks good | A single run is labeled in-sample-only; "go live" is never offered without an out-of-sample leg |
+| Cost realism | Modeling fees but not slippage or funding can show a profit that is a net loss live | States exactly which costs were modeled; flags thin-edge, high-churn strategies as cost-fragile |
+
+<Accordions type="single">
+<Accordion title="Deep dive: the validity-check contract">
+
+Every check returns the same shape, so verdicts compose mechanically rather than by prose. Note that `validity_score` is a transparency index of input completeness, and is explicitly **never** used as a filter or sort key.
+
+```text
+{
+  verdict:          ok | caution | abstain
+  validity_score:   0..1     # transparency index of input completeness; NEVER a filter or sort key
+  reasons:          [ ... ]  # plain-language causes; these drive the user-facing message
+  inputs_used:      [ ... ]  # what actually contributed
+  inputs_missing:   [ ... ]  # what was absent, skipped, or errored
+  premise_relevant: bool     # true  = a real regime/statistical concern (blocks go-live)
+                             # false = a "couldn't verify" degradation (does not)
+}
+```
+
+</Accordion>
+</Accordions>
+
+## Overfit-aware statistics
+
+Warren implements the published **Bailey and López de Prado** statistics. The **Probabilistic Sharpe Ratio** is the probability that the true Sharpe exceeds a benchmark, correcting for sample length, skewness, and kurtosis. The **Deflated Sharpe Ratio** raises that benchmark to account for the *number of trials* searched and their variance: the multiple-testing correction that makes a cherry-picked best-of-fifty face the bar it deserves. Both are computed on the per-period (not annualized) Sharpe; feeding the headline annualized figure would saturate the statistic on pure noise, a common silent bug.
+
+<Callout type="info">
+**The "deflated" honesty flag.** A result is labeled *deflated* only when a real search actually supplied a trial count and per-trial variance. Absent that, the statistic mathematically collapses to a single-trial probability, so Warren labels it "Probabilistic Sharpe (single-trial)" instead, and instructs every consumer to present it that way. The system refuses to claim more statistical rigor than it actually applied.
+</Callout>
+
+<Accordions type="single">
+<Accordion title="Deep dive: the Sharpe statistics">
+
+```text
+PSR(SR*) = Φ( (SR − SR*) · √(n−1)
+              / √(1 − skew·SR + ((kurt−1)/4)·SR²) )
+
+SR* = √V · [ (1−γ)·Φ⁻¹(1 − 1/N) + γ·Φ⁻¹(1 − 1/(N·e)) ]
+        γ = Euler-Mascheroni constant
+        N = number of trials searched
+        V = variance of the trial Sharpes
+```
+
+PSR is the probability that the true Sharpe exceeds the benchmark, correcting for sample length, skewness, and kurtosis; DSR raises the benchmark to what the *best of N trials* would achieve on pure noise. Three implementation honesty details: the statistics are computed on the **per-period** (never annualized) Sharpe, since annualized input saturates the statistic to 1.0 on noise; the daily-return series is reconstructed to be byte-aligned with the headline Sharpe rather than computed a second, subtly different way; and degenerate samples (too few distinct returns, or zero variance) return an explicit insufficient-sample flag rather than a garbage probability.
+
+</Accordion>
+<Accordion title="Deep dive: sample adequacy and enforcement">
+
+The statistics are enforced as verdicts with a calibrated distinction. A **true deflation rejection**, a real multi-trial search whose corrected probability fails the bar, **abstains** ("in-sample noise, not an edge"). A merely low *single-trial* probability only **cautions**, because at one trial it is a sample-size statement, not proof of overfitting, and promoting it would wrongly reject nearly every legitimate short-window test. Too few trades abstains outright; a thin sample cautions; and a **temporal-concentration guard** cautions when many trades reconstruct to very few distinct active days (one flooded pair, one bad-fill day), statistically meaningless even at a high count.
+
+</Accordion>
+</Accordions>
+
+## Premise validity and alpha
+
+The premise check infers the strategy's directional thesis from its trades and compares it against the test window's realized direction, computed from closed candles over the backtest's actual date range: a wrong-regime pass cannot read clean. The companion beta-versus-alpha check asks a different question: did the return come from skill, or from simply riding the market?
+
+<Accordions type="single">
+<Accordion title="Deep dive: premise validity mechanics">
+
+The thesis is inferred primarily from **trade counts** (long versus short), falling back to P&L attribution. A strategy that materially traded both sides is *dual*, and one with no clear lean is *unknown*; both legitimately short-circuit the directional comparison. The test window's realized direction is then computed from closed candles over the backtest's actual date range and compared per pair, producing a per-leg status: match, weak match, neutral, soft mismatch, or decisive mismatch.
+
+The verdict logic is deliberately asymmetric. A clean single-direction strategy whose window decisively ran the other way **abstains** and is flagged premise-relevant; a strategy that merely leans is capped at **caution**. Path-awareness, crediting a large intra-window excursion, *demotes only* and is double-gated against volatility noise, so a dead-cat bounce can neither fake a match nor defuse a mismatch. Multi-pair baskets are sampled up to a cap and abstain only when a majority of conclusive legs contradict the thesis.
+
+A companion fail-safe closes the subtle hole: if only a summary of the backtest loaded, with no long/short split, the premise check cannot run, so the result is *forced* to a premise-relevant caution instead of passing clean.
+
+</Accordion>
+<Accordion title="Deep dive: beta versus alpha mechanics">
+
+Using the same window return as a buy-and-hold benchmark (negated for shorts), the check computes a **capture ratio**: strategy return divided by benchmark return. Losing money in a window its own direction favored reads as negative alpha. Capture far *above* 1x is not certified as skill, because it usually reflects leverage or sizing rather than edge. Lagging the hold on raw return while materially reducing drawdown is credited as legitimate risk-managed exposure, not failure. This check cautions but never hard-abstains.
+
+</Accordion>
+</Accordions>
+
+## Cost realism
+
+A backtest that models exchange fees but not slippage or funding can show a profit that is a net loss once it trades live. The check first states exactly which costs were modeled (exchange fees are; slippage and funding are not), then reasons about fragility from aggregates rather than trusting the headline profit.
+
+<Accordions type="single">
+<Accordion title="Deep dive: cost realism mechanics">
+
+Slippage exposure scales with *per-trade edge times trade count*, so a healthy profit factor built from a razor-thin per-trade edge across a very high trade count still cautions, and near-break-even plus high churn abstains. A zero-loss backtest is judged on its per-trade edge rather than a degenerate profit-factor ratio. For perpetual-futures strategies whose holds span funding intervals, unmodeled funding accrues; this is detected by positive evidence (a short trade, a perpetual pair, declared leverage), never inferred from fee levels. A backtest that already lost money skips the check entirely, since it has failed on its own merits.
+
+</Accordion>
+</Accordions>
+
+## How the verdicts compose
+
+Checks do not fire as independent alerts. A ledger rolls up the **worst** verdict; an abstain forces the result's deploy-readiness flags off and inserts its explanation at the top of the caveats. A *premise-relevant* concern, a real regime or statistical problem, blocks the go-live suggestion, while a mere "we could not verify" caution does not: it still degrades the verdict and travels with the caveats, but the go-live suggestion is left standing. Money movement itself remains confirm-gated regardless (see [Execution](/docs/warren/execution)). By the time a result reaches you it carries an explicit verdict, plain-language caveats, an honest name for its Sharpe figure, freshness stamps on its inputs, and a deploy option offered only once earned.
+
+<Callout type="info">
+An earlier version of the product surfaced a single confidence number, and first-party analysis found it non-discriminative: over a large sample of decided paper signals it barely moved off one value and had essentially zero correlation with realized outcomes. The lesson is encoded everywhere: decisions come from explicit hard rules producing three-way verdicts, never from a threshold on one opaque score.
+</Callout>
+
+<Callout type="warn">
+**Black box.** The numeric cutoffs, sample-adequacy floors, staleness multipliers, profit-factor tiers, mismatch thresholds, and the confidence bars on the Sharpe statistics are internal. What is documented is the contract: which check fires, what it means, and how it composes into the final verdict.
+</Callout>
+
+## Where this fits
+
+<Cards>
+<Card title="The Regime Engine" href="/docs/warren/regime-engine" description="How the regime label and its coverage verdict, the inputs many of these checks defend, are built." />
+<Card title="System Architecture" href="/docs/warren/architecture" description="Where the validity layer lives, and the answer guard that can replace a reply with an honest abstention." />
+</Cards>

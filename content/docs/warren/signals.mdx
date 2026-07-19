@@ -1,0 +1,60 @@
+---
+title: Signals & Alerts
+description: "A continuous scan of hundreds of tokens, curated into typed trade signals, each with suggested levels and a real, outcome-tracked hit rate."
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+
+Signal generation runs **out of the conversation path**. Scheduled scanners sweep the monitored universe around the clock, and a narration stage turns raw scans into typed, human-readable *smart signals*: market analysis, anomaly alerts, trend-continuation setups, bounce setups, and armed-entry follow-ups, each carrying a direction, a confidence label, suggested entry, stop, and target levels, and a validity horizon. Because every published signal is outcome-tracked against what price actually did, hit-rate analytics are computed on **real forward returns**, not claims.
+
+## The signal pipeline
+
+<DiagramSignalPipeline />
+
+When a signal's horizon elapses, it is validated against what price actually did, and validated outcomes roll up into hit-rate analytics per signal type and per trigger combination, with misses counted as first-class results.
+
+## What you can do
+
+- **Scan on demand.** Sweep all monitored tokens for opportunities, rising risks, big movers, momentum, or coins whose signal just flipped.
+- **Browse the curated set.** Active in-horizon signals, hit-rate analytics by signal type, conditional entries still waiting for price confirmation, and recent misses, the failures are first-class, not hidden.
+- **Get alerted.** Concise pushes to Telegram or the in-app inbox, typed by what happened: a regime shift, an opportunity, a risk warning.
+
+<Callout type="info">
+**The same honesty discipline.** Signals carry the platform's caution annotations: an exhaustion read or a low-liquidity caution travels *with* the signal rather than being dropped. Each signal also declares how it may be used, *watch only*, *enter only if price confirms*, or *actionable now*, and that declaration governs whether Warren may act on it or only summarize it. And because hit-rate analytics measure real forward returns with misses included, a signal type is never allowed to look better than it actually performed. The mechanics live in the [validity layer](/docs/warren/validity-layer).
+</Callout>
+
+## Deep mechanics
+
+<Accordions type="single">
+<Accordion title="Deep dive: anatomy of a signal">
+
+Each published signal is a typed record, not a one-line call:
+
+```
+signal:
+  track          analysis | anomaly | continuation | bounce | armed-entry follow-up
+  direction      long | short
+  confidence     graded label + sizing guidance (a label, never a raw probability)
+  levels         entry, stop, target
+  entry_style    immediate  vs  wait-for-retest
+  horizon_hours  how long the call stays valid
+  factors        the key drivers behind the call
+  narrative      a short, plain-language read
+  # stamped after the horizon elapses:
+  outcome        validated against what price actually did
+  forward_return the real move, which feeds the hit-rate analytics
+```
+
+After the horizon elapses, the signal is **validated against what price actually did** and stamped with its outcome and forward return, which is what makes the hit-rate analytics (per signal type, per trigger combination) real measurements rather than marketing. Duplicate signals on the same pair are collapsed to the single best one, and conditional entries that never trigger expire *visibly* rather than quietly vanishing.
+
+</Accordion>
+</Accordions>
+
+## Related
+
+<Cards>
+  <Card title="Market intelligence" href="/docs/warren/market-intelligence" description="The closed-candle regime, indicator, and price reads that a scan is built on." />
+  <Card title="Build & backtest" href="/docs/warren/building-and-backtesting" description="Turn a repeatable signal into a strategy and test it honestly across regimes." />
+</Cards>

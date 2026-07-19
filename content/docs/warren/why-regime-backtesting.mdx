@@ -1,0 +1,125 @@
+---
+title: Why Regime-Based Backtesting
+description: "A single continuous backtest averages bull, bear, and ranging behavior into one number that hides both when a strategy works and when it quietly gives everything back."
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+
+This is the single most important idea in how Warren evaluates strategies. A single continuous backtest averages bull, bear, and ranging behavior into one number that hides both when a strategy works and when it quietly gives everything back.
+
+Backtest a trend follower continuously over a long window and you get one figure, say `+9%`, that is a weighted blend of three completely different behaviors: large gains while the trend held, large losses while it inverted, and slow bleed from fees and whipsaw while the market ranged. That one number is not wrong, exactly. It is just useless for the decision you actually have to make.
+
+## The averaging trap
+
+The blended number tells you almost nothing actionable. It does not tell you the strategy is a *trend* strategy; it does not tell you to turn it off in a downtrend. Two strategies with identical full-period returns can have opposite regime profiles: one grinds steadily, the other makes 40% in Q1 and loses 31% in Q3. Averaged, they look the same. Deployed, they are not.
+
+The same trap operates *across instruments*: a strategy that loses 30% on one alt while winning 15% on a major shows a mediocre blended average that hides a real per-pair winner. **Averaging hides the conditional structure of edge**, which is exactly the structure you need to deploy and manage capital.
+
+<DiagramContinuousVsRegime />
+
+The `+9%` and the segmented profile describe the *same trades*. Only the second one tells you what to do with them.
+
+## Two modes, chosen by the question
+
+Warren labels every backtest with the question it can honestly answer, selecting the mode automatically from the window's length (always overridable).
+
+| Mode | Window | Question it answers |
+| --- | --- | --- |
+| **Regime** | Short (roughly a quarter or less) | Under what conditions does this strategy have an edge, and how bad is its worst regime? |
+| **Full-period** | Long (spans multiple regimes) | What would a user actually experience running it continuously through regime changes? |
+
+The two views are complementary, not competing. The full-period view is the honest reality check on the regime view: it prices in the cost of *not* switching. The regime view is the honest reality check on the full-period view: it decomposes a bland average into "great here, disastrous there," which is what you need to deploy and manage capital.
+
+## Robustness as a first-class action
+
+Before a regime backtest, Warren's **window planner** searches pre-computed regime history for a clean, confidently-classified, single-regime window. Candidates are ranked **quality-first, not recency-first**, because an older but unambiguous window is a stronger test environment than a recent noisy one.
+
+Its flagship use is the **all-regimes robustness sweep**: one request returns the best window for *each* of bullish, bearish, and ranging, the same strategy is run across all three, and it is judged on its **worst** regime, not its favorite.
+
+The regime-conditional thesis is also encoded as a prior. Each strategy *category* maps to the regimes where it should have an edge, and the planner nudges testing toward the regime where the category's edge, if any, lives.
+
+| Category | Regimes where it should work |
+| --- | --- |
+| Momentum, Trend-following, Breakout, Volatility | bullish, bearish (any strong trend) |
+| Scalping | ranging, bullish |
+| Grid, Mean-reversion | ranging |
+
+A strategy that performs "the same everywhere" is either genuinely all-weather (rare, and usually defensive by construction) or, far more commonly, its edge is too small to distinguish from noise in any regime.
+
+<Callout type="warn">
+**The mixed-regime guard.** The averaging trap can sneak back in through the *window you pick*. For windows beyond a couple of months, Warren assigns each day to a single regime and computes the dominant share: `single regime` (clean), `dominant` (usable), or `mixed` (blended, therefore misleading). When the verdict is **mixed**, the backtest does *not* run. Warren returns the regime composition and asks you to narrow the window, or to override explicitly. A blended number is never produced without a conscious choice.
+</Callout>
+
+## Honest trade-offs
+
+Regime-based testing is the right default, but Warren surfaces its limits rather than papering over them:
+
+- A regime-scoped test read *in isolation* flatters the strategy. Mitigated by sweeping all three regimes and grading the worst.
+- Regime labels are probabilistic, and a net-directional window can still contain counter-trend stretches. These are flagged, not hidden.
+- Tokens without their own regime history fall back to market proxies. This is reported, with caveats.
+- Single-regime windows contain fewer trades, so per-regime statistics carry wider error bars.
+- The regime-conditional edge is only realizable if you correctly *detect* the regime live and *switch* in time, a cost the full-period view captures.
+- No mitigation is left to prose alone: the **robustness grade** operationalizes the lesson with per-regime grades, a consistency score (worst divided by best), and a hard disqualification on catastrophic drawdown in *any* single regime. A great average cannot buy an A.
+
+## The recommended evaluation flow
+
+<DiagramEvaluationFlow />
+
+The output of this flow is not a single `+9%`. It is a **profile**: *earns in trends, bleeds in ranges, disqualified in bear markets by drawdown, deploy now because we are in a confirmed uptrend, switch out when the regime turns.* That profile is what a continuous backtest can never give you.
+
+<Accordions type="single">
+<Accordion title="Deep dive: how windows are found and scored">
+
+Regime history is materialized per pair as **dated spans**. Each span carries its basic regime, its duration, the classification confidence it was labeled with, the intra-window counter-trend drawdown it contains, and whether it is a *pure* span or was *merged* from adjacent same-regime spans.
+
+The window planner searches these rows and ranks candidates **quality-first**: confidently-classified, adequately-long, pure windows outrank stitched or noisy ones, and recency is an opt-in weight reserved for deployment forecasting rather than validation. (The exact scoring weights are internal.)
+
+When the best available window is still weak, the planner attaches the specific quality warning, low classification confidence, merged-only coverage, or heavy intra-window drawdown, rather than returning a clean-looking answer.
+
+</Accordion>
+<Accordion title="Deep dive: how the mixed-regime verdict is computed">
+
+For any window long enough to plausibly span conditions, Warren pulls *all* regime spans overlapping the requested range, falling through the token, then ETH, then BTC proxy chain if the token has no history of its own, and assigns **each day to exactly one regime**. The most specific overlapping span wins, so hierarchical spans do not double-count. It then computes each regime's share of days:
+
+```
+# each day assigned to exactly one regime, then:
+single regime : one regime covers the large majority of days   -> clean, run
+dominant      : one regime holds a majority                    -> usable, run with note
+mixed         : no regime holds a majority                     -> blocked pending override
+
+# the full composition is always attached:
+#   per-regime share of days, the verdict, and which proxy source supplied the spans
+```
+
+Because the composition travels with the result either way, the number is never read without its context.
+
+</Accordion>
+<Accordion title="Deep dive: how robustness is graded">
+
+The robustness grade runs the strategy per regime and rolls the results into three things:
+
+```
+per_regime_grade  : a grade for each of bull, bear, range
+consistency_score : worst-regime performance / best-regime performance
+overall_grade     : with one hard rule below
+
+# hard rule:
+#   catastrophic drawdown in ANY single regime disqualifies, regardless of the average.
+# gaps:
+#   a regime with no available test window is penalized and reported as a gap,
+#   never silently skipped, with a pointer to go find the missing window.
+```
+
+The consistency score is what stops a strategy from hiding a disaster behind a strong favorite: a lopsided profile scores poorly even when the average looks fine.
+
+</Accordion>
+</Accordions>
+
+<Cards>
+  <Card title="Why Regime" href="/docs/warren/why-regime" description="Why no single strategy wins in every market, the thesis this testing enforces." />
+  <Card title="Built Not to Lie" href="/docs/warren/built-not-to-lie" description="The validity layer that keeps every backtest number honest." />
+  <Card title="Backtesting & Optimization" href="/docs/warren/building-and-backtesting" description="Running tests, comparing strategies, auto-tuning with an overfit guard." />
+  <Card title="The Regime Engine" href="/docs/warren/regime-engine" description="How the regime labels that windows are built from are produced." />
+</Cards>

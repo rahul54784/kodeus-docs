@@ -3,6 +3,7 @@ import { cn } from '@/lib/cn';
 import { resolveImageSrc } from '@/lib/shared';
 import type { MDXComponents } from 'mdx/types';
 import type { ComponentProps } from 'react';
+import * as Diagrams from '@/components/diagrams';
 
 function DocsImage({ src, alt, className, ...props }: ComponentProps<'img'>) {
   const resolvedSrc = resolveImageSrc(src);
@@ -21,6 +22,7 @@ function DocsImage({ src, alt, className, ...props }: ComponentProps<'img'>) {
 export function getMDXComponents(components?: MDXComponents) {
   return {
     ...defaultMdxComponents,
+    ...Diagrams,
     img: DocsImage,
     ...components,
   } satisfies MDXComponents;

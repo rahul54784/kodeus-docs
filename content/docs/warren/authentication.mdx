@@ -1,7 +1,9 @@
 ---
 title: Authentication
-description: "Access Warren using wallet authentication or email verification with OTP."
+description: "Access Warren using wallet authentication or email verification with a one-time passcode."
 ---
+
+import { Callout } from 'fumadocs-ui/components/callout';
 
 ![Welcome to Warren](/docs/images/warren/welcome-login.png)
 
@@ -9,6 +11,8 @@ Warren currently supports two ways to authenticate:
 
 - Wallet authentication
 - Email authentication with OTP verification
+
+<Callout type="info">Authentication grants access to your Warren workspace only. It is non-custodial: your funds always stay on your own connected exchange, and Warren receives execution authorization through exchange API keys, never custody of your capital.</Callout>
 
 ## Wallet authentication
 

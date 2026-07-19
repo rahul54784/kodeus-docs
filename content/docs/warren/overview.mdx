@@ -1,45 +1,90 @@
 ---
 title: Overview
-description: "Warren is a private AI fund manager on Kodeus that helps you discover, allocate, and run trading strategies through a guided experience."
+description: "Warren is your private AI fund manager on Kodeus: discover a proven strategy, validate it honestly, deploy it, and monitor it, all through conversation."
 ---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
 
 ![Meet Warren](/docs/images/warren/meet-warren.png)
 
-Warren is a private AI fund manager built on Kodeus that helps you discover, allocate, and run trading strategies through a guided experience.
+Warren is your **private AI fund manager** for crypto, powered by Kodeus. You talk to it in plain English, and it brings institutional-grade discipline within reach of any trader: **discover** a proven strategy, **validate** it honestly, **deploy** it, and **monitor** it with continuous checks, every claim verified before it reaches you.
 
-Instead of manually monitoring charts, managing entries, or coordinating multiple strategies, you configure preferences, define risk boundaries, and allow Warren to manage execution within the limits you set.
+Rather than replacing you, Warren does the work a disciplined fund manager does, and it earns that title by being **calibrated and honest, not a fortune-teller**. Directional price prediction in crypto is close to a coin flip. Warren's edge is being precise about the *state* of a market, disciplined about risk, and honest about uncertainty.
 
-## What Warren is designed around
+Your funds always stay on your own connected exchange. Warren only ever receives execution authorization through exchange API keys, and never takes custody of your capital.
 
-- Strategy discovery
-- Guided trading
-- Portfolio assistance
-- Market intelligence
-- Allocation-aware execution
-- User-controlled capital management
+## What makes it different
 
-## What Warren supports
+- **Regime-conditional by design.** No single strategy wins in every market, so Warren classifies the market's state first and conditions every recommendation, test, and deployment on it. This is the argument of [Why Regime](/docs/warren/why-regime).
+- **Engineered not to lie.** Every performance number passes a validity layer that targets the specific ways backtests mislead: look-ahead, overfitting, wrong-regime testing, and unmodeled costs. See [Built Not to Lie](/docs/warren/built-not-to-lie).
+- **Safety enforced in code.** Abstaining on thin data, confirm-to-approve on money actions, and a default block on unattended trading are hard mechanisms, not prompt suggestions. See [Architecture](/docs/warren/architecture).
+- **A marketplace for strategies, not signals.** You discover transparent, data-backed strategies with verified track records instead of chasing influencers and one-off calls, and creators turn trading expertise into a discoverable, reputation-building asset. See [Marketplace](/docs/warren/marketplace).
 
-- Paper trading using simulated capital
-- Live trading using connected exchanges
-- Demo exploration without exchange connectivity
+## What you can do
 
-Your funds always remain on your connected exchange. Warren only receives execution authorization through exchange APIs.
+<Cards>
+  <Card title="Read the market" href="/docs/warren/market-intelligence" description="Regime, indicators, prices, and news context for any pair, on closed candles, stamped with freshness." />
+  <Card title="Get signals and alerts" href="/docs/warren/signals" description="A continuous scan of hundreds of tokens, curated into typed signals with levels and a real, outcome-tracked hit rate." />
+  <Card title="Build and backtest" href="/docs/warren/building-and-backtesting" description="Find or build strategies, then test them per-regime and full-period with an overfit guard and failure diagnosis." />
+  <Card title="Execute and trade" href="/docs/warren/execution" description="Automated strategy bots plus Warren's discretionary book, on paper or real funds, across seven exchanges." />
+  <Card title="Track performance" href="/docs/warren/analytics" description="Profit and loss, drawdown, win rate, trade history, and plain-language health verdicts per bot." />
+  <Card title="Share and discover" href="/docs/warren/marketplace" description="A community marketplace with verified track records, judged on worst drawdown, not the headline number." />
+  <Card title="Run it unattended" href="/docs/warren/autopilot" description="Scheduled autopilot: watch-and-report by default, autonomous execution only if deliberately armed." />
+  <Card title="Stay in control" href="/docs/warren/exchanges" description="Account defaults, exchange connections, and enforced risk limits: leverage caps, drawdown caps, loss-streak pauses." />
+</Cards>
 
-## Core Warren workflow
+And everything above is driven by conversation: live reasoning, planning, memory, and a knowledge base. See [Talking to Warren](#talking-to-warren) below.
 
-The current Warren experience follows a guided activation flow:
+## How Warren works
 
-1. Access Warren
-2. Authenticate using wallet or email
-3. Complete onboarding personalization
-4. Configure risk preferences
-5. Select trading styles and market types
-6. Allow Warren to prepare recommendations
-7. Select one or more strategies
-8. Choose trading mode
-9. Configure capital allocation
-10. Launch strategy execution
-11. Monitor strategies through the dashboard
+<Steps>
+<Step>Access Warren from the Kodeus platform.</Step>
+<Step>Authenticate using your wallet or email.</Step>
+<Step>Complete a short onboarding to personalize recommendations.</Step>
+<Step>Configure your risk preferences.</Step>
+<Step>Select your trading styles and market types.</Step>
+<Step>Let Warren prepare strategy recommendations.</Step>
+<Step>Select one or more strategies.</Step>
+<Step>Choose your trading mode, paper or live.</Step>
+<Step>Configure capital allocation.</Step>
+<Step>Launch strategy execution.</Step>
+<Step>Monitor everything through the dashboard.</Step>
+</Steps>
 
-Next: [Authentication](/docs/warren/authentication)
+<Callout type="info">Everything above is driven by conversation, and paper mode is always the default. You can walk the full workflow with simulated funds before any real capital is at risk.</Callout>
+
+## Talking to Warren
+
+Every capability in these docs is driven by plain-English conversation; you never call anything directly. You talk, and Warren selects and chains the right capabilities and returns a calibrated, honesty-gated answer. The conversational layer adds:
+
+- **Live reasoning.** Warren's steps stream as it works, and a turn can be cancelled mid-run.
+- **Planning.** Multi-step requests can be broken into an explicit plan before any action is taken.
+- **Suggested follow-ups.** Substantive answers end with a few next questions phrased in your voice.
+- **Memory.** Conversation context and preferences persist; long chats are condensed automatically so context is not lost.
+- **Knowledge base.** Questions can be answered over your uploaded documents via retrieval.
+- **Input normalization.** Sloppy input is understood: *"buy me btcusdt $10"* resolves to the right pair and size.
+- **Private per user.** Strategies, trades, balances, memory, and settings are scoped to you alone.
+
+<Accordions type="single">
+<Accordion title="Deep dive: how a conversation is orchestrated">
+
+Under the surface, a coordinating agent delegates to one child agent per attached capability service, plus a small set of fixed helpers: general reasoning, knowledge retrieval, and artifact generation. Each user gets an isolated execution context with a per-turn lock, evicted when idle, and long conversations are condensed automatically so context is preserved without unbounded growth.
+
+</Accordion>
+</Accordions>
+
+## How to read these docs
+
+- **New to Warren?** Read this page and [Core Concepts](/docs/warren/core-concepts), then skim the capability pages above for what it can do.
+- **Evaluating the methodology?** The design philosophy is the heart of it: [Why Regime](/docs/warren/why-regime), [Why Regime-Based Backtesting](/docs/warren/why-regime-backtesting), and [Built Not to Lie](/docs/warren/built-not-to-lie).
+- **Getting hands-on?** Start with the [Quickstart](/docs/warren/quickstart), then [Onboarding](/docs/warren/onboarding), the [Dashboard](/docs/warren/dashboard), and the [How-To Guides](/docs/warren/how-to).
+- **Integrating or auditing?** The engine internals: [The Regime Engine](/docs/warren/regime-engine), [The Validity Layer](/docs/warren/validity-layer), and [Architecture](/docs/warren/architecture).
+
+<Callout type="info">
+**On proprietary internals.** These docs describe what each mechanism does and why, and name the published techniques used. The exact indicator sets, classifier weights and thresholds, validity cutoffs, and infrastructure identifiers are deliberately treated as a black box: inputs, behavior, outputs. The contract and guarantees are documented; the numbers that would let the system be reconstructed or gamed are not.
+</Callout>
+
+Next: [Quickstart](/docs/warren/quickstart)
